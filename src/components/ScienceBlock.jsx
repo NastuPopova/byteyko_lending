@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Brain, Activity, Heart, Stethoscope, UserCircle2, Award, FlaskConical, Microscope, Zap } from 'lucide-react';
+import { Brain, Activity, Heart, Stethoscope, UserCircle2, Award, FlaskConical, Zap } from 'lucide-react';
 import '../styles/ScienceBlock.css';
 
 const buteikoPhoto = process.env.PUBLIC_URL + '/images/Buteiko.jpg';
@@ -108,7 +108,6 @@ const ScienceBlock = () => {
             Метод Бутейко прошёл <strong>две государственные апробации</strong> в ведущих медицинских
             учреждениях СССР и официально признан Министерством здравоохранения.
           </p>
-
           <div className="timeline">
             <div className="timeline-item">
               <div className="timeline-year">1952</div>
@@ -172,7 +171,6 @@ const ScienceBlock = () => {
               </div>
             </div>
           </div>
-
           <div className="research-info">
             <div className="info-icon">i</div>
             <p>
@@ -189,11 +187,8 @@ const ScienceBlock = () => {
       icon: <Brain size={24} />,
       content: (
         <div className="science-cards">
-
           <div className="science-card">
-            <div className="card-icon">
-              <Brain size={60} color="#4cdfff" />
-            </div>
+            <div className="card-icon"><Brain size={60} color="#4cdfff" /></div>
             <h3>Влияние на нервную систему</h3>
             <div className="stats-container">
               <div className="stat-item">
@@ -205,18 +200,10 @@ const ScienceBlock = () => {
                 <div className="stat-description">восстановление</div>
               </div>
             </div>
-            <p>
-              Нормализация CO₂ активирует блуждающий нерв («нерв спокойствия»), снижает тревожность и улучшает качество сна.
-              Парасимпатическая нервная система переходит в режим восстановления. По словам А.Е. Новожилова, главного врача
-              клиники Бутейко в Москве: пока человек «в методе» (лёгкий недостаток воздуха + расслабление) —
-              его практически невозможно вывести на конфликт или панику.
-            </p>
+            <p>Нормализация CO₂ активирует блуждающий нерв («нерв спокойствия»), снижает тревожность и улучшает качество сна. По словам А.Е. Новожилова, гл. врача клиники Бутейко в Москве: пока человек «в методе» — его практически невозможно вывести на конфликт или панику.</p>
           </div>
-
           <div className="science-card">
-            <div className="card-icon">
-              <Activity size={60} color="#4cdfff" />
-            </div>
+            <div className="card-icon"><Activity size={60} color="#4cdfff" /></div>
             <h3>CO₂ — главный регулятор pH</h3>
             <div className="stats-container">
               <div className="stat-item">
@@ -228,18 +215,10 @@ const ScienceBlock = () => {
                 <div className="stat-description">кислород в тканях</div>
               </div>
             </div>
-            <p>
-              CO₂ — <strong>единственный реальный регулятор pH крови</strong>. Никакие диеты, добавки и растворы
-              не способны значимо изменить системный pH — это делает только дыхание. Восстановление нормального
-              уровня CO₂ стабилизирует кислотно-щелочной баланс, снижает окислительный стресс и повышает доставку
-              кислорода к клеткам — <strong>эффект Вериго–Бора</strong>.
-            </p>
+            <p>CO₂ — <strong>единственный реальный регулятор pH крови</strong>. Никакие диеты, добавки и растворы не способны значимо изменить системный pH — это делает только дыхание. Восстановление нормального CO₂ стабилизирует pH, снижает окислительный стресс и повышает доставку кислорода к клеткам — <strong>эффект Вериго–Бора</strong>.</p>
           </div>
-
           <div className="science-card">
-            <div className="card-icon">
-              <Heart size={60} color="#4cdfff" />
-            </div>
+            <div className="card-icon"><Heart size={60} color="#4cdfff" /></div>
             <h3>Кожа, ЖКТ и микроциркуляция</h3>
             <div className="stats-container">
               <div className="stat-item">
@@ -251,18 +230,10 @@ const ScienceBlock = () => {
                 <div className="stat-description">моторика кишечника</div>
               </div>
             </div>
-            <p>
-              Гипервентиляция вызывает <strong>спазм капилляров</strong> → нарушение микроциркуляции → тканевая гипоксия
-              → кожные заболевания, дерматиты, аллергия. Нормализация дыхания устраняет капиллярный спазм и
-              восстанавливает кровоснабжение органов. Из клинической практики: пациенты с астмой отмечали
-              исчезновение запоров на 3-й день занятий — нормализовалась моторная функция кишечника.
-            </p>
+            <p>Гипервентиляция вызывает <strong>спазм капилляров</strong> → нарушение микроциркуляции → тканевая гипоксия → кожные заболевания, дерматиты, аллергия. Нормализация дыхания устраняет спазм и восстанавливает кровоснабжение. Из практики: у пациентов с астмой на 3-й день занятий уходили запоры, мучившие 50 лет.</p>
           </div>
-
           <div className="science-card">
-            <div className="card-icon">
-              <Zap size={60} color="#4cdfff" />
-            </div>
+            <div className="card-icon"><Zap size={60} color="#4cdfff" /></div>
             <h3>Контрольная пауза — измеримый результат</h3>
             <div className="stats-container">
               <div className="stat-item">
@@ -274,15 +245,8 @@ const ScienceBlock = () => {
                 <div className="stat-description">ремиссия при КП ≥ 45 сек</div>
               </div>
             </div>
-            <p>
-              Контрольная пауза (КП) — запатентованный Бутейко способ измерения CO₂ в альвеолярном воздухе.
-              Аналог градусника, но для дыхания. <strong>КП &lt; 20 сек</strong> — бронхи закрыты, острые симптомы.
-              <strong> КП 20–45 сек</strong> — возможна жизнь без лекарств, но воспаление сохраняется.
-              <strong> КП ≥ 45 сек</strong> стабильно на протяжении месяцев — хроническое аллергическое
-              воспаление уходит в ремиссию на 15 и более лет.
-            </p>
+            <p>Контрольная пауза (КП) — запатентованный Бутейко способ измерения CO₂. <strong>КП &lt; 20 сек</strong> — бронхи закрыты, острые симптомы. <strong>КП 20–45 сек</strong> — жизнь без лекарств, воспаление сохраняется. <strong>КП ≥ 45 сек</strong> стабильно на протяжении месяцев — хроническое воспаление уходит в ремиссию на 15+ лет.</p>
           </div>
-
         </div>
       )
     },
@@ -292,11 +256,8 @@ const ScienceBlock = () => {
       icon: <Activity size={24} />,
       content: (
         <div className="science-cards">
-
           <div className="science-card">
-            <div className="card-icon">
-              <Activity size={60} color="#4cdfff" />
-            </div>
+            <div className="card-icon"><Activity size={60} color="#4cdfff" /></div>
             <h3>Астма и дыхание</h3>
             <div className="stats-container">
               <div className="stat-item">
@@ -310,11 +271,8 @@ const ScienceBlock = () => {
             </div>
             <p>РКИ (Egyptian Journal of Chest Diseases, 2012; PMC, 2022) показывают снижение частоты приступов астмы на 50–70%, рост пиковой экспираторной скорости и сокращение потребности в ингаляторах.</p>
           </div>
-
           <div className="science-card">
-            <div className="card-icon">
-              <Heart size={60} color="#4cdfff" />
-            </div>
+            <div className="card-icon"><Heart size={60} color="#4cdfff" /></div>
             <h3>Сердце и давление</h3>
             <div className="stats-container">
               <div className="stat-item">
@@ -328,11 +286,8 @@ const ScienceBlock = () => {
             </div>
             <p>Исследования (Indian Journal of Physiotherapy, 2022) фиксируют снижение АД и частоты сердцебиения у пациентов с гипертонией после 4–6 недель практики. По официальной апробации 1990 года улучшение при гипертонии составило 96,2%.</p>
           </div>
-
           <div className="science-card">
-            <div className="card-icon">
-              <FlaskConical size={60} color="#4cdfff" />
-            </div>
+            <div className="card-icon"><FlaskConical size={60} color="#4cdfff" /></div>
             <h3>Комплексный эффект апробации</h3>
             <div className="stats-container">
               <div className="stat-item">
@@ -344,20 +299,10 @@ const ScienceBlock = () => {
                 <div className="stat-description">нозологий охвачено</div>
               </div>
             </div>
-            <p>
-              На государственных апробациях пациенты приходили с диагнозом «бронхиальная астма», однако
-              практически у каждого были сопутствующие заболевания: <strong>кожные болезни, аллергия,
-              нарушения ЖКТ</strong>. После курса по методу Бутейко проходили все эти состояния одновременно.
-              По данным А.Е. Новожилова, главного врача клиники Бутейко в Москве, у астматиков параллельно
-              улучшался и <strong>сахарный диабет 2 типа</strong>. 179 заболеваний метода охватывают
-              около 90% всей заболеваемости населения.
-            </p>
+            <p>На гос. апробациях пациенты приходили с астмой, но у каждого были сопутствующие заболевания: <strong>кожа, аллергия, нарушения ЖКТ</strong>. После курса по методу Бутейко проходили все эти состояния одновременно. По данным А.Е. Новожилова, гл. врача клиники Бутейко в Москве, у астматиков параллельно улучшался и <strong>сахарный диабет 2 типа</strong>.</p>
           </div>
-
           <div className="science-card">
-            <div className="card-icon">
-              <Brain size={60} color="#4cdfff" />
-            </div>
+            <div className="card-icon"><Brain size={60} color="#4cdfff" /></div>
             <h3>Научный критерий эффективности</h3>
             <div className="stats-container">
               <div className="stat-item">
@@ -369,20 +314,12 @@ const ScienceBlock = () => {
                 <div className="stat-description">в мире с доказанным KPI</div>
               </div>
             </div>
-            <p>
-              Метод Бутейко — <strong>единственная дыхательная методика в мире</strong> с измеримым
-              научным показателем эффективности. Любая методика даёт лечебный эффект только если нормализует
-              уровень CO₂ — без его измерения это маркетинг, а не медицина. Контрольная пауза (КП)
-              является запатентованным индикатором альвеолярного CO₂ и позволяет объективно отслеживать
-              динамику лечения.
-            </p>
+            <p>Метод Бутейко — <strong>единственная дыхательная методика в мире</strong> с измеримым научным показателем. Любая методика даёт лечебный эффект только если нормализует CO₂ — без его измерения это маркетинг, а не медицина. Контрольная пауза (КП) — запатентованный индикатор альвеолярного CO₂, позволяющий объективно отслеживать динамику лечения.</p>
           </div>
-
           <div className="research-info">
             <div className="info-icon">i</div>
             <p><strong>Cochrane Review 2020</strong> подтверждает умеренное улучшение качества жизни и функции лёгких. Систематические обзоры (Australian Government Department of Health, 2015) рекомендуют метод как эффективное дополнение к стандартному лечению астмы, апноэ сна, ХОБЛ и тревожных расстройств.</p>
           </div>
-
         </div>
       )
     },
@@ -395,28 +332,21 @@ const ScienceBlock = () => {
           <h3>Признание медицинским сообществом</h3>
           <div className="org-logos">
             <div className="org-logo-item">
-              <div className="org-logo-icon">
-                <Stethoscope size={40} color="#4cdfff" />
-              </div>
+              <div className="org-logo-icon"><Stethoscope size={40} color="#4cdfff" /></div>
               <p>Минздрав СССР</p>
               <div className="status">Приказ о внедрении, 1985</div>
             </div>
             <div className="org-logo-item">
-              <div className="org-logo-icon">
-                <Heart size={40} color="#4cdfff" />
-              </div>
+              <div className="org-logo-icon"><Heart size={40} color="#4cdfff" /></div>
               <p>GINA — Global Initiative for Asthma</p>
               <div className="status">Упомянут как немедикаментозная терапия</div>
             </div>
             <div className="org-logo-item">
-              <div className="org-logo-icon">
-                <Activity size={40} color="#4cdfff" />
-              </div>
+              <div className="org-logo-icon"><Activity size={40} color="#4cdfff" /></div>
               <p>Cochrane Collaboration</p>
               <div className="status">Review 2020 — подтверждена польза</div>
             </div>
           </div>
-
           <div className="quote-block">
             <div className="quote-marks">&ldquo;</div>
             <p className="quote-text">
@@ -426,7 +356,6 @@ const ScienceBlock = () => {
             </p>
             <div className="quote-source">По материалам официальных апробаций Минздрава СССР</div>
           </div>
-
           <div className="research-info">
             <div className="info-icon">!</div>
             <p>Метод рекомендуется как <strong>дополнение к стандартному лечению</strong>, а не его замена. Перед началом практики необходима консультация врача, особенно при хронических заболеваниях.</p>
@@ -440,7 +369,6 @@ const ScienceBlock = () => {
     <section className="science-block">
       <div className="container">
         <h2 className="section-title">Научное обоснование дыхательных практик</h2>
-
         <div className="science-tabs">
           <div className="tab-buttons">
             {tabs.map(tab => (
@@ -454,7 +382,6 @@ const ScienceBlock = () => {
               </button>
             ))}
           </div>
-
           <div className="tab-content">
             {tabs.find(tab => tab.id === activeTab)?.content}
           </div>
