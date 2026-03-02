@@ -50,7 +50,7 @@ const AboutMe = () => {
               <div className="relative w-full h-[600px] rounded-2xl overflow-hidden shadow-2xl">
                 <img
                   src={process.env.PUBLIC_URL + '/images/instruktor.png'}
-                  alt="Анастасия Попова - инструктор по дыхательным практикам"
+                  alt="Александр Попов - инструктор по дыхательным практикам"
                   className="w-full h-full object-cover object-center"
                   onError={(e) => {
                     console.error('Error loading image');
@@ -68,7 +68,7 @@ const AboutMe = () => {
           {/* Content */}
           <div className="lg:w-1/2">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-              Анастасия Попова
+              Александр Попов
             </h2>
             <div className="text-xl text-gray-600 space-y-4 mb-8">
               <p>
@@ -94,4 +94,4 @@ const AboutMe = () => {
   );
 };
 
-export default AboutMe; 
+export default AboutMe;
