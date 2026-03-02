@@ -59,7 +59,6 @@ const AboutMe = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
               </div>
-              {/* Decorative elements */}
               <div className="absolute -top-6 -right-6 w-32 h-32 bg-primary-100 rounded-full opacity-50 blur-2xl"></div>
               <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-primary-200 rounded-full opacity-50 blur-2xl"></div>
             </div>
@@ -70,15 +69,21 @@ const AboutMe = () => {
                 <span className="text-3xl">📜</span>
                 <div>
                   <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Клиника Бутейко® · Москва</p>
-                  <p className="text-lg font-bold text-gray-900">Официальный сертификат</p>
+                  <a
+                    href={process.env.PUBLIC_URL + '/sertifikat-buteiko.pdf'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-lg font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 transition-colors duration-200"
+                  >
+                    Официальный сертификат ↗
+                  </a>
                 </div>
               </div>
               <p className="text-gray-700 text-sm leading-relaxed">
                 Разрешается использовать <strong>Дыхательную гимнастику по Бутейко©</strong> для практических занятий, консультаций и рекламы.
               </p>
-              <div className="mt-3 flex items-center justify-between">
+              <div className="mt-3">
                 <span className="text-sm font-semibold text-gray-800">Попов Александр Сергеевич</span>
-                <span className="text-xs bg-green-100 text-green-700 font-semibold px-3 py-1 rounded-full">До 02.03.2027</span>
               </div>
               <p className="text-xs text-gray-400 mt-2">Выдан А.Е. Новожиловым · 02 марта 2026 г.</p>
             </div>
@@ -117,7 +122,7 @@ const AboutMe = () => {
                 Работаю индивидуально, с учётом именно вашей ситуации: астма, аллергия, хронический насморк, полипы, панические атаки от нехватки воздуха, гипервентиляция или просто желание наконец-то дышать легко и свободно. Подход одинаково бережный и для взрослых, и для детей.
               </p>
               <p className="font-medium text-gray-800">
-                Если вы устали от симптомов, которые «лечат», но не убирают причину, — давайте сделаем это вместе.<br/>
+                Если вы устали от симптомов, которые «лечат», но не убирают причину, — давайте сделаем это вместе.<br />
                 <span className="text-primary-600">Ваше свободное дыхание ближе, чем кажется.</span>
               </p>
             </div>
