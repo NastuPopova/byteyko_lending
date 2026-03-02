@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Brain, Activity, Heart, Stethoscope, UserCircle2, Award, FlaskConical } from 'lucide-react';
 import '../styles/ScienceBlock.css';
-import buteikoPhoto from '../../images/Buteiko.jpg';
+
+const buteikoPhoto = process.env.PUBLIC_URL + '/images/Buteiko.jpg';
 
 const ScienceBlock = () => {
   const [activeTab, setActiveTab] = useState('about');
@@ -307,7 +308,7 @@ const ScienceBlock = () => {
           </div>
 
           <div className="quote-block">
-            <div className="quote-marks">"</div>
+            <div className="quote-marks">&ldquo;</div>
             <p className="quote-text">
               Метод дыхательной гимнастики Бутейко — единственный в мире немедикаментозный метод,
               прошедший две государственные апробации и официально утверждённый Министерством
