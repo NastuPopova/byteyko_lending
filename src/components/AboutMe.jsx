@@ -50,7 +50,7 @@ const AboutMe = () => {
 
           <div className="lg:flex lg:items-start lg:space-x-12">
             {/* Image + Certificate + Contacts */}
-            <div className="lg:w-1/2 mb-12 lg:mb-0 lg:-mt-48">
+            <div className="lg:w-1/2 mb-12 lg:mb-0 lg:-mt-24">
               <div className="relative">
                 <div className="relative w-full h-[750px] rounded-2xl overflow-hidden shadow-2xl">
                   <img
