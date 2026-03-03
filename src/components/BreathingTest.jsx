@@ -121,12 +121,13 @@ const BreathingTest = () => {
                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-3xl z-10"></div>
                 
                 {/* Экран */}
-                <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-inner relative" style={{ aspectRatio: '9/19.5' }}>
+                <div className="bg-gray-100 rounded-[2.5rem] overflow-hidden shadow-inner relative" style={{ aspectRatio: '9/19.5' }}>
                   {/* Реальные скриншоты бота */}
                   <img
                     src={process.env.PUBLIC_URL + screens[currentScreen].image}
                     alt={screens[currentScreen].alt}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain bg-white"
+                    style={{ objectPosition: 'center' }}
                     onError={(e) => {
                       console.error('Error loading image:', screens[currentScreen].image);
                       e.target.style.display = 'none';
@@ -134,30 +135,37 @@ const BreathingTest = () => {
                   />
 
                   {/* Кнопки навигации */}
-                  <button
-                    onClick={prevScreen}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
-                  >
-                    <ChevronLeft className="h-6 w-6 text-gray-800" />
-                  </button>
-                  <button
-                    onClick={nextScreen}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
-                  >
-                    <ChevronRight className="h-6 w-6 text-gray-800" />
-                  </button>
+                  {screens.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevScreen}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 z-20"
+                        aria-label="Предыдущий скриншот"
+                      >
+                        <ChevronLeft className="h-6 w-6 text-gray-800" />
+                      </button>
+                      <button
+                        onClick={nextScreen}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 z-20"
+                        aria-label="Следующий скриншот"
+                      >
+                        <ChevronRight className="h-6 w-6 text-gray-800" />
+                      </button>
+                    </>
+                  )}
 
                   {/* Индикаторы */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
                     {screens.map((_, index) => (
                       <button
                         key={index}
                         onClick={() => setCurrentScreen(index)}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        className={`transition-all duration-300 rounded-full ${
                           index === currentScreen 
-                            ? 'bg-orange-500 w-6' 
-                            : 'bg-gray-300 hover:bg-gray-400'
+                            ? 'bg-orange-500 w-6 h-2' 
+                            : 'bg-gray-400 hover:bg-gray-500 w-2 h-2'
                         }`}
+                        aria-label={`Перейти к скриншоту ${index + 1}`}
                       />
                     ))}
                   </div>
