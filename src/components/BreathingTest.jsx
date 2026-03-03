@@ -1,5 +1,5 @@
-import React from 'react';
-import { CheckCircle, Clock, Sparkles, TrendingUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle, Clock, Sparkles, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const features = [
   {
@@ -25,6 +25,22 @@ const features = [
 ];
 
 const BreathingTest = () => {
+  const [currentScreen, setCurrentScreen] = useState(0);
+  const screens = [
+    { image: '/images/bot-screen-1.jpg', alt: 'Интерфейс теста - экран 1' },
+    { image: '/images/bot-screen-2.jpg', alt: 'Интерфейс теста - экран 2' },
+    { image: '/images/bot-screen-3.jpg', alt: 'Интерфейс теста - экран 3' },
+    { image: '/images/bot-screen-4.jpg', alt: 'Интерфейс теста - экран 4' }
+  ];
+
+  const nextScreen = () => {
+    setCurrentScreen((prev) => (prev + 1) % screens.length);
+  };
+
+  const prevScreen = () => {
+    setCurrentScreen((prev) => (prev - 1 + screens.length) % screens.length);
+  };
+
   const goToTestBot = () => {
     window.open('https://t.me/breathing_diagnostic_bot', '_blank');
   };
@@ -96,7 +112,7 @@ const BreathingTest = () => {
             </div>
           </div>
 
-          {/* Правая колонка - мокап телефона с интерфейсом */}
+          {/* Правая колонка - мокап телефона с реальными скриншотами */}
           <div className="relative">
             <div className="relative mx-auto" style={{ maxWidth: '380px' }}>
               {/* Мокап телефона */}
@@ -105,37 +121,45 @@ const BreathingTest = () => {
                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-3xl z-10"></div>
                 
                 {/* Экран */}
-                <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-inner" style={{ aspectRatio: '9/19.5' }}>
-                  {/* Здесь будут ваши скриншоты */}
-                  <div className="w-full h-full bg-gradient-to-br from-teal-50 to-orange-50 flex items-center justify-center p-6">
-                    <div className="text-center space-y-6">
-                      {/* Имитация интерфейса бота */}
-                      <div className="bg-white rounded-2xl p-6 shadow-lg">
-                        <div className="w-12 h-12 bg-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center">
-                          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
-                          </svg>
-                        </div>
-                        <h3 className="font-bold text-gray-900 mb-2">Диагностика дыхания</h3>
-                        <p className="text-sm text-gray-600 mb-4">Ответьте на несколько вопросов</p>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full" style={{ width: '35%' }}></div>
-                        </div>
-                      </div>
+                <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-inner relative" style={{ aspectRatio: '9/19.5' }}>
+                  {/* Реальные скриншоты бота */}
+                  <img
+                    src={process.env.PUBLIC_URL + screens[currentScreen].image}
+                    alt={screens[currentScreen].alt}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Error loading image:', screens[currentScreen].image);
+                      e.target.style.display = 'none';
+                    }}
+                  />
 
-                      {/* Кнопки ответов */}
-                      <div className="space-y-3">
-                        <div className="bg-white rounded-xl p-4 shadow-md text-left">
-                          <p className="text-sm font-medium text-gray-900">Да, часто</p>
-                        </div>
-                        <div className="bg-white rounded-xl p-4 shadow-md text-left">
-                          <p className="text-sm font-medium text-gray-900">Иногда</p>
-                        </div>
-                        <div className="bg-white rounded-xl p-4 shadow-md text-left">
-                          <p className="text-sm font-medium text-gray-900">Редко</p>
-                        </div>
-                      </div>
-                    </div>
+                  {/* Кнопки навигации */}
+                  <button
+                    onClick={prevScreen}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
+                  >
+                    <ChevronLeft className="h-6 w-6 text-gray-800" />
+                  </button>
+                  <button
+                    onClick={nextScreen}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
+                  >
+                    <ChevronRight className="h-6 w-6 text-gray-800" />
+                  </button>
+
+                  {/* Индикаторы */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    {screens.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentScreen(index)}
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                          index === currentScreen 
+                            ? 'bg-orange-500 w-6' 
+                            : 'bg-gray-300 hover:bg-gray-400'
+                        }`}
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
