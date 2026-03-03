@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, CheckCircle, BarChart2 } from 'lucide-react';
+import { Award, CheckCircle, BarChart2, Phone, Mail, MessageCircle } from 'lucide-react';
 
 const achievements = [
   {
@@ -121,6 +121,61 @@ const AboutMe = () => {
               <p className="font-medium text-gray-800">
                 Если вы устали от симптомов, которые «лечат», но не убирают причину, — давайте сделаем это вместе.<br />
                 <span className="text-primary-600">Ваше свободное дыхание ближе, чем кажется.</span>
+              </p>
+            </div>
+
+            {/* Блок контактов */}
+            <div className="bg-gradient-to-br from-primary-50 to-white rounded-2xl p-8 shadow-lg border-2 border-primary-200">
+              <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+                Связаться со мной
+              </h3>
+              <div className="space-y-4">
+                <a
+                  href="https://t.me/AS_Popov87"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 p-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 group border border-primary-100 hover:border-blue-300"
+                >
+                  <div className="bg-blue-500 p-3 rounded-lg group-hover:bg-blue-600 transition-colors duration-300">
+                    <MessageCircle className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-500 font-medium">Telegram</p>
+                    <p className="text-lg font-semibold text-gray-900">@AS_Popov87</p>
+                  </div>
+                  <span className="text-blue-500 font-medium group-hover:translate-x-1 transition-transform duration-300">→</span>
+                </a>
+
+                <a
+                  href="tel:+79224705187"
+                  className="flex items-center gap-4 p-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 group border border-primary-100 hover:border-primary-300"
+                >
+                  <div className="bg-primary-600 p-3 rounded-lg group-hover:bg-primary-700 transition-colors duration-300">
+                    <Phone className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-500 font-medium">Телефон</p>
+                    <p className="text-lg font-semibold text-gray-900">+7 (922) 470-51-87</p>
+                  </div>
+                  <span className="text-primary-600 font-medium group-hover:translate-x-1 transition-transform duration-300">→</span>
+                </a>
+
+                <a
+                  href="mailto:murchelon@yandex.ru"
+                  className="flex items-center gap-4 p-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 group border border-primary-100 hover:border-red-300"
+                >
+                  <div className="bg-red-500 p-3 rounded-lg group-hover:bg-red-600 transition-colors duration-300">
+                    <Mail className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-500 font-medium">Email</p>
+                    <p className="text-lg font-semibold text-gray-900">murchelon@yandex.ru</p>
+                  </div>
+                  <span className="text-red-500 font-medium group-hover:translate-x-1 transition-transform duration-300">→</span>
+                </a>
+              </div>
+              <p className="text-center text-gray-600 mt-6 text-sm">
+                Отвечу в течение дня. Готов обсудить вашу ситуацию и подобрать индивидуальную программу.
               </p>
             </div>
           </div>
