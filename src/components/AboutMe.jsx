@@ -22,6 +22,7 @@ const achievements = [
 
 const AboutMe = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [showPhone, setShowPhone] = useState(false);
 
   return (
     <>
@@ -49,9 +50,9 @@ const AboutMe = () => {
 
           <div className="lg:flex lg:items-center lg:space-x-12">
             {/* Image + Certificate */}
-            <div className="lg:w-1/2 mb-12 lg:mb-0 lg:-mt-20">
+            <div className="lg:w-1/2 mb-12 lg:mb-0 lg:-mt-32">
               <div className="relative">
-                <div className="relative w-full h-[600px] rounded-2xl overflow-hidden shadow-2xl">
+                <div className="relative w-full h-[750px] rounded-2xl overflow-hidden shadow-2xl">
                   <img
                     src={process.env.PUBLIC_URL + '/images/instruktor.jpg'}
                     alt="Александр Попов - инструктор по дыхательной гимнастике Бутейко"
@@ -61,7 +62,8 @@ const AboutMe = () => {
                       e.target.style.display = 'none';
                     }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary-100/60 via-transparent to-transparent"></div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent"></div>
                 </div>
                 <div className="absolute -top-6 -right-6 w-32 h-32 bg-primary-100 rounded-full opacity-50 blur-2xl"></div>
                 <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-primary-200 rounded-full opacity-50 blur-2xl"></div>
@@ -150,19 +152,25 @@ const AboutMe = () => {
                     <span className="text-blue-500 font-medium group-hover:translate-x-1 transition-transform duration-300">→</span>
                   </a>
 
-                  <a
-                    href="tel:+79224705187"
-                    className="flex items-center gap-4 p-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 group border border-primary-100 hover:border-primary-300"
+                  <button
+                    onClick={() => setShowPhone(!showPhone)}
+                    className="w-full flex items-center gap-4 p-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 group border border-primary-100 hover:border-primary-300"
                   >
                     <div className="bg-primary-600 p-3 rounded-lg group-hover:bg-primary-700 transition-colors duration-300">
                       <Phone className="h-6 w-6 text-white" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 text-left">
                       <p className="text-sm text-gray-500 font-medium">Телефон</p>
-                      <p className="text-lg font-semibold text-gray-900">+7 (922) 470-51-87</p>
+                      {showPhone ? (
+                        <a href="tel:+79224705187" className="text-lg font-semibold text-gray-900 hover:text-primary-600">
+                          +7 (922) 470-51-87
+                        </a>
+                      ) : (
+                        <p className="text-lg font-semibold text-gray-900">Нажмите, чтобы показать</p>
+                      )}
                     </div>
                     <span className="text-primary-600 font-medium group-hover:translate-x-1 transition-transform duration-300">→</span>
-                  </a>
+                  </button>
 
                   <button
                     onClick={() => setIsFormOpen(true)}

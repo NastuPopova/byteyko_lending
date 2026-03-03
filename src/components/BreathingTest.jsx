@@ -46,7 +46,7 @@ const BreathingTest = () => {
   };
 
   return (
-    <section id="breathing-test" className="py-20 bg-gradient-to-br from-orange-50 via-white to-teal-50 relative overflow-hidden">
+    <section id="breathing-test" className="py-20 bg-gradient-to-br from-orange-100 via-white to-teal-100 relative overflow-hidden">
       {/* Декоративные элементы */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-orange-200 rounded-full opacity-10 blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-200 rounded-full opacity-10 blur-3xl"></div>

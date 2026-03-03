@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Phone, Mail, MessageCircle } from 'lucide-react';
 
 const Footer = () => {
+  const [showPhone, setShowPhone] = useState(false);
+
   return (
     <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-white py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
           {/* О проекте */}
           <div>
-            <h3 className="text-2xl font-bold mb-4">Александр Попов</h3>
+            <h3 className="text-2xl font-bold mb-4 text-blue-100">Александр Попов</h3>
             <p className="text-gray-300 text-lg leading-relaxed">
               Сертифицированный инструктор по дыхательной гимнастике Бутейко.
               Помогаю людям избавиться от астмы, аллергии и других проблем с дыханием.
@@ -17,20 +19,26 @@ const Footer = () => {
 
           {/* Контакты */}
           <div>
-            <h3 className="text-xl font-bold mb-6">Контакты</h3>
+            <h3 className="text-xl font-bold mb-6 text-blue-100">Контакты</h3>
             <div className="space-y-4">
-              <a
-                href="tel:+79224705187"
-                className="flex items-center gap-3 text-gray-300 hover:text-white transition-colors duration-200 group"
+              <button
+                onClick={() => setShowPhone(!showPhone)}
+                className="flex items-center gap-3 text-gray-300 hover:text-white transition-colors duration-200 group w-full text-left"
               >
                 <div className="bg-primary-600 p-3 rounded-lg group-hover:bg-primary-700 transition-colors duration-200">
                   <Phone className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Телефон</p>
-                  <p className="text-lg font-semibold">+7 (922) 470-51-87</p>
+                  {showPhone ? (
+                    <a href="tel:+79224705187" className="text-lg font-semibold hover:text-primary-400">
+                      +7 (922) 470-51-87
+                    </a>
+                  ) : (
+                    <p className="text-lg font-semibold">Нажмите, чтобы показать</p>
+                  )}
                 </div>
-              </a>
+              </button>
 
               <a
                 href="https://t.me/AS_Popov87"
@@ -64,7 +72,7 @@ const Footer = () => {
 
           {/* Быстрые ссылки */}
           <div>
-            <h3 className="text-xl font-bold mb-6">Навигация</h3>
+            <h3 className="text-xl font-bold mb-6 text-blue-100">Навигация</h3>
             <ul className="space-y-3">
               <li>
                 <a
