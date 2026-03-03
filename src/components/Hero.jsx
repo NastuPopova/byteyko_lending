@@ -21,7 +21,7 @@ const Hero = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="relative min-h-screen w-full overflow-hidden"
+      className="relative min-h-screen w-full overflow-hidden pt-28 md:pt-36"
     >
       {/* Background Image */}
       <motion.div
@@ -77,11 +77,11 @@ const Hero = () => {
       </motion.div>
 
       {/* Content */}
-      <div className="relative min-h-screen flex items-center justify-center">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+      <div className="relative min-h-[calc(100vh-10rem)] flex items-center justify-center py-12">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
           <SectionTransition>
             <motion.div
-              className="bg-black/5 backdrop-blur-sm rounded-3xl p-8 md:p-12 mb-8 border border-white/10 hover:bg-black/10 hover:backdrop-blur-md"
+              className="bg-black/5 backdrop-blur-sm rounded-3xl p-10 md:p-14 mb-8 border border-white/10 hover:bg-black/10 hover:backdrop-blur-md"
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1, transition: { duration: 0.8, delay: 0.3 } }}
             >
@@ -96,7 +96,7 @@ const Hero = () => {
               </motion.div>
 
               <motion.h1
-                className="text-4xl md:text-6xl font-bold mb-6 leading-tight text-white drop-shadow-lg"
+                className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight text-white drop-shadow-lg"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1, transition: { duration: 0.5, delay: 0.5 } }}
               >
@@ -106,7 +106,7 @@ const Hero = () => {
               </motion.h1>
 
               <motion.p
-                className="text-xl md:text-2xl mb-8 text-white/95 drop-shadow"
+                className="text-xl md:text-2xl lg:text-3xl mb-8 text-white/95 drop-shadow max-w-4xl mx-auto"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1, transition: { duration: 0.5, delay: 0.7 } }}
               >
@@ -139,19 +139,19 @@ const Hero = () => {
           {/* Statistics Card */}
           <SectionTransition>
             <motion.div
-              className="bg-black/5 backdrop-blur-sm rounded-2xl p-6 max-w-lg mx-auto border border-white/10 hover:bg-black/10 hover:backdrop-blur-md"
+              className="bg-black/5 backdrop-blur-sm rounded-2xl p-8 max-w-2xl mx-auto border border-white/10 hover:bg-black/10 hover:backdrop-blur-md"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1, transition: { duration: 0.8, delay: 1.3 } }}
             >
               <motion.h3
-                className="text-5xl font-bold mb-4 text-white drop-shadow-lg"
+                className="text-5xl md:text-6xl font-bold mb-4 text-white drop-shadow-lg"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1, transition: { duration: 0.5, delay: 1.5 } }}
               >
                 96,69%
               </motion.h3>
               <motion.p
-                className="text-lg text-white/95 drop-shadow"
+                className="text-lg md:text-xl text-white/95 drop-shadow"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1, transition: { duration: 0.5, delay: 1.7 } }}
               >
@@ -159,7 +159,7 @@ const Hero = () => {
                 <span className="font-semibold text-orange-300"> Узнайте свой уровень CO₂ сейчас!</span>
               </motion.p>
               <motion.p
-                className="text-xs text-white/50 mt-3"
+                className="text-xs md:text-sm text-white/50 mt-3"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1, transition: { duration: 0.5, delay: 1.9 } }}
               >
