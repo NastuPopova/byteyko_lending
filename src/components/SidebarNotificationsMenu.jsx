@@ -29,16 +29,16 @@ const SidebarNotificationsMenu = ({ notificationSettings, onSettingsChange }) =>
 
   return (
     <>
-      <div className="fixed top-28 right-4 flex flex-col gap-4">
+      <div className="fixed top-36 md:top-40 right-4 flex flex-col gap-4 z-50">
         <button
           onClick={handleTelegramClick}
-          className="w-12 h-12 bg-blue-500 text-white hover:bg-blue-600 rounded-full shadow-lg z-50 transition-all duration-300 flex items-center justify-center hover:scale-110 active:scale-95"
+          className="w-12 h-12 bg-blue-500 text-white hover:bg-blue-600 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center hover:scale-110 active:scale-95"
         >
           <Send size={24} />
         </button>
         <button
           onClick={toggleMenu}
-          className="w-12 h-12 bg-teal-600 text-white hover:bg-teal-700 rounded-full shadow-lg z-50 transition-all duration-300 flex items-center justify-center hover:scale-110 active:scale-95"
+          className="w-12 h-12 bg-teal-600 text-white hover:bg-teal-700 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center hover:scale-110 active:scale-95"
         >
           {isOpen ? <BellOff size={24} /> : <Bell size={24} />}
         </button>
@@ -69,7 +69,7 @@ const SidebarNotificationsMenu = ({ notificationSettings, onSettingsChange }) =>
               </label>
             </div>
             <div className="flex justify-between items-center">
-              <span>Звуковые уведомления</span>
+              <span>Звуовые уведомления</span>
               <label className="switch">
                 <input
                   type="checkbox"
