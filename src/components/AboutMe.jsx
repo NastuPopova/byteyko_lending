@@ -1,5 +1,6 @@
-import React from 'react';
-import { Award, CheckCircle, BarChart2, Phone, Mail, MessageCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Award, CheckCircle, BarChart2, Phone, MessageCircle, Send } from 'lucide-react';
+import ContactForm from './ContactForm';
 
 const achievements = [
   {
@@ -20,168 +21,175 @@ const achievements = [
 ];
 
 const AboutMe = () => {
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
   return (
-    <section id="about-me" className="py-20 bg-gradient-to-b from-white to-primary-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        {/* Achievements */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
-          {achievements.map((achievement, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 group text-center"
-            >
-              <div className="flex justify-center mb-8 transform group-hover:scale-110 transition-transform duration-300">
-                {achievement.icon}
+    <>
+      <section id="about-me" className="py-20 bg-gradient-to-b from-white to-primary-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          {/* Achievements */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
+            {achievements.map((achievement, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 group text-center"
+              >
+                <div className="flex justify-center mb-8 transform group-hover:scale-110 transition-transform duration-300">
+                  {achievement.icon}
+                </div>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+                  {achievement.title}
+                </h3>
+                <p className="text-gray-600 text-lg">
+                  {achievement.description}
+                </p>
               </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-                {achievement.title}
-              </h3>
-              <p className="text-gray-600 text-lg">
-                {achievement.description}
-              </p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div className="lg:flex lg:items-center lg:space-x-12">
-          {/* Image + Certificate */}
-          <div className="lg:w-1/2 mb-12 lg:mb-0 lg:-mt-20">
-            <div className="relative">
-              <div className="relative w-full h-[600px] rounded-2xl overflow-hidden shadow-2xl">
-                <img
-                  src={process.env.PUBLIC_URL + '/images/instruktor.png'}
-                  alt="Александр Попов - инструктор по дыхательной гимнастике Бутейко"
-                  className="w-full h-full object-cover object-center"
-                  onError={(e) => {
-                    console.error('Error loading image');
-                    e.target.style.display = 'none';
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+          <div className="lg:flex lg:items-center lg:space-x-12">
+            {/* Image + Certificate */}
+            <div className="lg:w-1/2 mb-12 lg:mb-0 lg:-mt-20">
+              <div className="relative">
+                <div className="relative w-full h-[600px] rounded-2xl overflow-hidden shadow-2xl">
+                  <img
+                    src={process.env.PUBLIC_URL + '/images/instruktor.jpg'}
+                    alt="Александр Попов - инструктор по дыхательной гимнастике Бутейко"
+                    className="w-full h-full object-cover object-center"
+                    onError={(e) => {
+                      console.error('Error loading image');
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                </div>
+                <div className="absolute -top-6 -right-6 w-32 h-32 bg-primary-100 rounded-full opacity-50 blur-2xl"></div>
+                <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-primary-200 rounded-full opacity-50 blur-2xl"></div>
               </div>
-              <div className="absolute -top-6 -right-6 w-32 h-32 bg-primary-100 rounded-full opacity-50 blur-2xl"></div>
-              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-primary-200 rounded-full opacity-50 blur-2xl"></div>
+
+              {/* Certificate block */}
+              <div className="mt-8 bg-white rounded-2xl shadow-lg p-6 border border-primary-100">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-3xl">📜</span>
+                  <div>
+                    <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Клиника Бутейко® · Москва</p>
+                    <a
+                      href={process.env.PUBLIC_URL + '/sertifikat-buteiko.pdf'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-lg font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 transition-colors duration-200"
+                    >
+                      Официальный сертификат ↗
+                    </a>
+                  </div>
+                </div>
+                <p className="text-gray-700 text-sm leading-relaxed">
+                  Разрешается использовать <strong>Дыхательную гимнастику по Бутейко©</strong> для практических занятий, консультаций и рекламы.
+                </p>
+                <div className="mt-3">
+                  <span className="text-sm font-semibold text-gray-800">Попов Александр Сергеевич</span>
+                </div>
+                <p className="text-xs text-gray-400 mt-2">Выдан А.Е. Новожиловым · 02 марта 2026 г.</p>
+              </div>
             </div>
 
-            {/* Certificate block */}
-            <div className="mt-8 bg-white rounded-2xl shadow-lg p-6 border border-primary-100">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-3xl">📜</span>
-                <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Клиника Бутейко® · Москва</p>
+            {/* Content */}
+            <div className="lg:w-1/2">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+                Александр Попов
+              </h2>
+              <div className="text-xl text-gray-600 space-y-4 mb-8">
+                <p className="font-medium text-gray-800">
+                  Сертифицированный инструктор по методу Бутейко, практик с личным опытом полного изменения жизни через дыхание.
+                </p>
+                <p>
+                  С детства я жил с тяжёлой бронхиальной астмой, сильной аллергией и рецидивирующими полипами в носу. Три операции, бесконечные ингаляторы, приступы удушья по ночам, постоянный страх, что в любой момент снова «накроет» — это была моя реальность больше 30 лет.
+                </p>
+                <p>
+                  Пока в один момент я не открыл метод Бутейко по-настоящему глубоко. Не просто почитал — а стал жить по нему каждый день. Результат превзошёл все ожидания:
+                </p>
+                <ul className="space-y-2 text-lg">
+                  <li className="flex items-start gap-2"><span className="text-primary-600 font-bold mt-1">✓</span><span>астма ушла в стойкую ремиссию (уже годы без приступов и без гормонов)</span></li>
+                  <li className="flex items-start gap-2"><span className="text-primary-600 font-bold mt-1">✓</span><span>полипы в носу полностью рассосались (контрольные обследования это подтвердили)</span></li>
+                  <li className="flex items-start gap-2"><span className="text-primary-600 font-bold mt-1">✓</span><span>аллергия стала гораздо слабее, а качество жизни — совершенно другим</span></li>
+                </ul>
+                <p>
+                  Тогда я понял: это не просто гимнастика. Это способ вернуть телу то дыхание, которое ему от природы предназначено. И я не мог оставить этот инструмент только себе.
+                </p>
+                <p>
+                  Я получил официальный сертификат инструктора по методу Бутейко, прошёл серьёзное обучение и теперь помогаю другим людям проходить тот же путь — от удушья, страха и зависимости от лекарств к свободному дыханию и настоящему здоровью.
+                </p>
+                <p>
+                  Работаю индивидуально, с учётом именно вашей ситуации: астма, аллергия, хронический насморк, полипы, панические атаки от нехватки воздуха, гипервентиляция. Подход одинаково бережный для взрослых и для детей.
+                </p>
+                <p className="font-medium text-gray-800">
+                  Если вы устали от симптомов, которые «лечат», но не убирают причину, — давайте сделаем это вместе.<br />
+                  <span className="text-primary-600">Ваше свободное дыхание ближе, чем кажется.</span>
+                </p>
+              </div>
+
+              {/* Блок контактов */}
+              <div className="bg-gradient-to-br from-primary-50 to-white rounded-2xl p-8 shadow-lg border-2 border-primary-200">
+                <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+                  Связаться со мной
+                </h3>
+                <div className="space-y-4">
                   <a
-                    href={process.env.PUBLIC_URL + '/sertifikat-buteiko.pdf'}
+                    href="https://t.me/AS_Popov87"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-lg font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 transition-colors duration-200"
+                    className="flex items-center gap-4 p-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 group border border-primary-100 hover:border-blue-300"
                   >
-                    Официальный сертификат ↗
+                    <div className="bg-blue-500 p-3 rounded-lg group-hover:bg-blue-600 transition-colors duration-300">
+                      <MessageCircle className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-500 font-medium">Telegram</p>
+                      <p className="text-lg font-semibold text-gray-900">@AS_Popov87</p>
+                    </div>
+                    <span className="text-blue-500 font-medium group-hover:translate-x-1 transition-transform duration-300">→</span>
                   </a>
+
+                  <a
+                    href="tel:+79224705187"
+                    className="flex items-center gap-4 p-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 group border border-primary-100 hover:border-primary-300"
+                  >
+                    <div className="bg-primary-600 p-3 rounded-lg group-hover:bg-primary-700 transition-colors duration-300">
+                      <Phone className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-500 font-medium">Телефон</p>
+                      <p className="text-lg font-semibold text-gray-900">+7 (922) 470-51-87</p>
+                    </div>
+                    <span className="text-primary-600 font-medium group-hover:translate-x-1 transition-transform duration-300">→</span>
+                  </a>
+
+                  <button
+                    onClick={() => setIsFormOpen(true)}
+                    className="w-full flex items-center gap-4 p-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 group border border-primary-100 hover:border-orange-300"
+                  >
+                    <div className="bg-orange-500 p-3 rounded-lg group-hover:bg-orange-600 transition-colors duration-300">
+                      <Send className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm text-gray-500 font-medium">Форма обратной связи</p>
+                      <p className="text-lg font-semibold text-gray-900">Написать сообщение</p>
+                    </div>
+                    <span className="text-orange-500 font-medium group-hover:translate-x-1 transition-transform duration-300">→</span>
+                  </button>
                 </div>
+                <p className="text-center text-gray-600 mt-6 text-sm">
+                  Отвечу в течение дня. Готов обсудить вашу ситуацию и подобрать индивидуальную программу.
+                </p>
               </div>
-              <p className="text-gray-700 text-sm leading-relaxed">
-                Разрешается использовать <strong>Дыхательную гимнастику по Бутейко©</strong> для практических занятий, консультаций и рекламы.
-              </p>
-              <div className="mt-3">
-                <span className="text-sm font-semibold text-gray-800">Попов Александр Сергеевич</span>
-              </div>
-              <p className="text-xs text-gray-400 mt-2">Выдан А.Е. Новожиловым · 02 марта 2026 г.</p>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="lg:w-1/2">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-              Александр Попов
-            </h2>
-            <div className="text-xl text-gray-600 space-y-4 mb-8">
-              <p className="font-medium text-gray-800">
-                Сертифицированный инструктор по методу Бутейко, практик с личным опытом полного изменения жизни через дыхание.
-              </p>
-              <p>
-                С детства я жил с тяжёлой бронхиальной астмой, сильной аллергией и рецидивирующими полипами в носу. Три операции, бесконечные ингаляторы, приступы удушья по ночам, постоянный страх, что в любой момент снова «накроет» — это была моя реальность больше 30 лет.
-              </p>
-              <p>
-                Пока в один момент я не открыл метод Бутейко по-настоящему глубоко. Не просто почитал — а стал жить по нему каждый день. Результат превзошёл все ожидания:
-              </p>
-              <ul className="space-y-2 text-lg">
-                <li className="flex items-start gap-2"><span className="text-primary-600 font-bold mt-1">✓</span><span>астма ушла в стойкую ремиссию (уже годы без приступов и без гормонов)</span></li>
-                <li className="flex items-start gap-2"><span className="text-primary-600 font-bold mt-1">✓</span><span>полипы в носу полностью рассосались (контрольные обследования это подтвердили)</span></li>
-                <li className="flex items-start gap-2"><span className="text-primary-600 font-bold mt-1">✓</span><span>аллергия стала гораздо слабее, а качество жизни — совершенно другим</span></li>
-              </ul>
-              <p>
-                Тогда я понял: это не просто гимнастика. Это способ вернуть телу то дыхание, которое ему от природы предназначено. И я не мог оставить этот инструмент только себе.
-              </p>
-              <p>
-                Я получил официальный сертификат инструктора по методу Бутейко, прошёл серьёзное обучение и теперь помогаю другим людям проходить тот же путь — от удушья, страха и зависимости от лекарств к свободному дыханию и настоящему здоровью.
-              </p>
-              <p>
-                Работаю индивидуально, с учётом именно вашей ситуации: астма, аллергия, хронический насморк, полипы, панические атаки от нехватки воздуха, гипервентиляция. Подход одинаково бережный для взрослых и для детей.
-              </p>
-              <p className="font-medium text-gray-800">
-                Если вы устали от симптомов, которые «лечат», но не убирают причину, — давайте сделаем это вместе.<br />
-                <span className="text-primary-600">Ваше свободное дыхание ближе, чем кажется.</span>
-              </p>
-            </div>
-
-            {/* Блок контактов */}
-            <div className="bg-gradient-to-br from-primary-50 to-white rounded-2xl p-8 shadow-lg border-2 border-primary-200">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-                Связаться со мной
-              </h3>
-              <div className="space-y-4">
-                <a
-                  href="https://t.me/AS_Popov87"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 group border border-primary-100 hover:border-blue-300"
-                >
-                  <div className="bg-blue-500 p-3 rounded-lg group-hover:bg-blue-600 transition-colors duration-300">
-                    <MessageCircle className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-500 font-medium">Telegram</p>
-                    <p className="text-lg font-semibold text-gray-900">@AS_Popov87</p>
-                  </div>
-                  <span className="text-blue-500 font-medium group-hover:translate-x-1 transition-transform duration-300">→</span>
-                </a>
-
-                <a
-                  href="tel:+79224705187"
-                  className="flex items-center gap-4 p-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 group border border-primary-100 hover:border-primary-300"
-                >
-                  <div className="bg-primary-600 p-3 rounded-lg group-hover:bg-primary-700 transition-colors duration-300">
-                    <Phone className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-500 font-medium">Телефон</p>
-                    <p className="text-lg font-semibold text-gray-900">+7 (922) 470-51-87</p>
-                  </div>
-                  <span className="text-primary-600 font-medium group-hover:translate-x-1 transition-transform duration-300">→</span>
-                </a>
-
-                <a
-                  href="mailto:murchelon@yandex.ru"
-                  className="flex items-center gap-4 p-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 group border border-primary-100 hover:border-red-300"
-                >
-                  <div className="bg-red-500 p-3 rounded-lg group-hover:bg-red-600 transition-colors duration-300">
-                    <Mail className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-500 font-medium">Email</p>
-                    <p className="text-lg font-semibold text-gray-900">murchelon@yandex.ru</p>
-                  </div>
-                  <span className="text-red-500 font-medium group-hover:translate-x-1 transition-transform duration-300">→</span>
-                </a>
-              </div>
-              <p className="text-center text-gray-600 mt-6 text-sm">
-                Отвечу в течение дня. Готов обсудить вашу ситуацию и подобрать индивидуальную программу.
-              </p>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* Contact Form Modal */}
+      <ContactForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} />
+    </>
   );
 };
 
