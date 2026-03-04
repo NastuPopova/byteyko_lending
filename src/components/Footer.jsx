@@ -142,7 +142,7 @@ const Footer = () => {
         <div className="border-t border-gray-700 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-center md:text-left">
-              © {new Date().getFullYear()} Александр Попов. Все права защищены.
+              © {new Date().getFullYear()} Александр Попов, г. Тюмень. Все права защищены.
             </p>
             <p className="text-gray-400 text-center md:text-right">
               Дыхательная гимнастика по методу Бутейко

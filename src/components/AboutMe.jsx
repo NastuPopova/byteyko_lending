@@ -29,7 +29,7 @@ const AboutMe = () => {
       <section id="about-me" className="py-20 bg-gradient-to-b from-white to-primary-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           {/* Achievements */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-32">
             {achievements.map((achievement, index) => (
               <div
                 key={index}
@@ -50,7 +50,7 @@ const AboutMe = () => {
 
           <div className="lg:flex lg:items-start lg:space-x-12">
             {/* Image + Certificate + Contacts */}
-            <div className="lg:w-1/2 mb-12 lg:mb-0 lg:-mt-48">
+            <div className="lg:w-1/2 mb-12 lg:mb-0">
               <div className="relative">
                 <div className="relative w-full h-[750px] rounded-2xl overflow-hidden shadow-2xl">
                   <img
