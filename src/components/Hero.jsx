@@ -12,6 +12,12 @@ const Hero = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // 🆕 ГЛАВНАЯ КНОПКА: Запись через бота с отслеживанием источника
+  const goToBot = () => {
+    window.open('https://t.me/breathing_opros_bot?start=website_hero', '_blank');
+  };
+
+  // Оставляем диагностический бот для теста (опциональная кнопка)
   const goToTestBot = () => {
     window.open('https://t.me/breathing_diagnostic_bot', '_blank');
   };
@@ -115,23 +121,38 @@ const Hero = () => {
                 <span className="font-semibold text-orange-300">— дефицит CO₂</span>{' '}— а не заглушает симптомы.
               </motion.p>
 
-              <motion.button
-                onClick={goToTestBot}
-                className="bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold py-4 px-8 rounded-full text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:from-orange-600 hover:to-orange-700 active:scale-95 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-teal-800 group"
+              {/* 🆕 ГЛАВНАЯ КНОПКА - Запись через бота */}
+              <motion.div
+                className="flex flex-col sm:flex-row gap-4 justify-center items-center"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1, transition: { duration: 0.5, delay: 0.9 } }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
-                Пройти бесплатный тест дыхания
-              </motion.button>
+                <motion.button
+                  onClick={goToBot}
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold py-4 px-8 rounded-full text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:from-orange-600 hover:to-orange-700 active:scale-95 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-teal-800 group"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  🌬️ Записаться на консультацию
+                </motion.button>
+
+                {/* Опциональная кнопка для диагностического теста */}
+                <motion.button
+                  onClick={goToTestBot}
+                  className="bg-white/10 backdrop-blur-sm border border-white/30 text-white font-semibold py-4 px-8 rounded-full text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:bg-white/20 active:scale-95 focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-teal-800"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  📊 Пройти тест дыхания
+                </motion.button>
+              </motion.div>
 
               <motion.p
                 className="mt-4 text-sm text-white/90 drop-shadow"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1, transition: { duration: 0.5, delay: 1.1 } }}
               >
-                ⚡️ Время прохождения теста: 2–3 минуты
+                ⚡️ Запись и оплата через удобного Telegram-бота
               </motion.p>
             </motion.div>
           </SectionTransition>
