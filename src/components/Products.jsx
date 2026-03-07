@@ -6,13 +6,13 @@ const TELEGRAM_BOT = 'breathing_opros_bot';
 
 const Products = () => {
   // 🎯 КОМБИНИРОВАННЫЕ МЕТКИ: источник + продукт
-  // Формат: website_cta_ПРОДУКТ
+  // Формат: website-cta-ПРОДУКТ
   // Позволяет отслеживать И откуда пришёл И что выбрал
   const handleTelegramRedirect = (product) => {
     const links = {
-      starter: `https://t.me/${TELEGRAM_BOT}?start=website_cta_starter`,
-      consultation: `https://t.me/${TELEGRAM_BOT}?start=website_cta_consultation`,
-      package5: `https://t.me/${TELEGRAM_BOT}?start=website_cta_package5`
+      starter: `https://t.me/${TELEGRAM_BOT}?start=website-cta-starter`,
+      consultation: `https://t.me/${TELEGRAM_BOT}?start=website-cta-consultation`,
+      package5: `https://t.me/${TELEGRAM_BOT}?start=website-cta-package5`
     };
     window.open(links[product], '_blank');
   };
