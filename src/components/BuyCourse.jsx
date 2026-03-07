@@ -5,13 +5,13 @@ const TELEGRAM_BOT = 'breathing_opros_bot';
 
 const BuyCourse = () => {
   // 🎯 КОМБИНИРОВАННЫЕ МЕТКИ: источник + продукт
-  // Формат: website-cta-ПРОДУКТ
+  // Формат: websiteCtaStarter (camelCase - Telegram удаляет - и _)
   // Позволяет отслеживать И откуда пришёл И что выбрал
   const handleTelegramRedirect = (product) => {
     const links = {
-      starter: `https://t.me/${TELEGRAM_BOT}?start=website-cta-starter`,
-      consultation: `https://t.me/${TELEGRAM_BOT}?start=website-cta-consultation`,
-      package5: `https://t.me/${TELEGRAM_BOT}?start=website-cta-package5`
+      starter: `https://t.me/${TELEGRAM_BOT}?start=websiteCtaStarter`,
+      consultation: `https://t.me/${TELEGRAM_BOT}?start=websiteCtaConsultation`,
+      package5: `https://t.me/${TELEGRAM_BOT}?start=websiteCtaPackage5`
     };
     window.open(links[product], '_blank');
   };
