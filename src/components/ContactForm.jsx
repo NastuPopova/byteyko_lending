@@ -5,6 +5,7 @@ const ContactForm = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     name: '',
     contact: '',
+    email: '',
     problem: '',
     message: ''
   });
@@ -34,6 +35,7 @@ const ContactForm = ({ isOpen, onClose }) => {
           access_key: '1d42a41b-08bc-43e1-a32c-35f7b1598e42',
           name: formData.name,
           contact: formData.contact,
+          email: formData.email,
           problem: formData.problem,
           message: formData.message,
           subject: `Новая заявка с сайта Buteyko - ${formData.name}`
@@ -44,7 +46,7 @@ const ContactForm = ({ isOpen, onClose }) => {
 
       if (result.success) {
         setSubmitStatus('success');
-        setFormData({ name: '', contact: '', problem: '', message: '' });
+        setFormData({ name: '', contact: '', email: '', problem: '', message: '' });
         setTimeout(() => {
           onClose();
           setSubmitStatus(null);
@@ -121,6 +123,22 @@ const ContactForm = ({ isOpen, onClose }) => {
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                 placeholder="+7 (900) 123-45-67 или @username"
+              />
+            </div>
+
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                Электронная почта (необязательно)
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                placeholder="primer@mail.ru"
               />
             </div>
 
