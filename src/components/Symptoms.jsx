@@ -62,7 +62,7 @@ const Symptoms = () => {
   };
 
   const scrollToTest = () => {
-    const testSection = document.getElementById('quick-test');
+    const testSection = document.getElementById('breathing-test');
     if (testSection) {
       testSection.scrollIntoView({ behavior: 'smooth' });
     }
@@ -256,4 +256,4 @@ const Symptoms = () => {
   );
 };
 
-export default Symptoms; 
+export default Symptoms;
