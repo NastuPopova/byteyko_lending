@@ -1,10 +1,13 @@
-import React from 'react';
-import { Check, Gift, Send, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Check, Gift, Send, Clock, MessageCircle } from 'lucide-react';
 import SectionTransition from './SectionTransition';
+import ContactForm from './ContactForm';
 
 const TELEGRAM_BOT = 'breathing_opros_bot';
 
 const Products = () => {
+  const [showFeedback, setShowFeedback] = useState(false);
+
   // 🎯 КОМБИНИРОВАННЫЕ МЕТКИ: источник + продукт
   // Формат: websiteCtaStarter (camelCase - Telegram удаляет - и _)
   // Позволяет отслеживать И откуда пришёл И что выбрал
@@ -44,7 +47,7 @@ const Products = () => {
                     ⚡️ Мгновенный доступ
                   </div>
                 </div>
-                
+
                 <div className="space-y-4 mb-8">
                   <h4 className="font-semibold text-gray-900">Что получите:</h4>
                   <div className="flex items-start">
@@ -60,7 +63,7 @@ const Products = () => {
                     <span className="text-gray-700">Доступ к материалам навсегда</span>
                   </div>
                 </div>
-                
+
                 <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-8">
                   <div className="flex items-center gap-2 text-yellow-600 font-bold mb-2">
                     <Gift className="h-5 w-5" />
@@ -71,7 +74,7 @@ const Products = () => {
                     <span>Урок по замеру контрольной паузы (CO₂)</span>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-col items-center mb-8">
                   <div className="flex items-baseline">
                     <span className="text-5xl font-extrabold text-gray-900">990</span>
@@ -80,8 +83,8 @@ const Products = () => {
                     <span className="ml-2 text-sm bg-red-100 text-red-600 px-2 py-1 rounded-full font-medium">-62%</span>
                   </div>
                 </div>
-                
-                <button 
+
+                <button
                   onClick={() => handleTelegramRedirect('starter')}
                   className="w-full bg-primary-600 text-white font-semibold py-4 px-8 rounded-full text-lg shadow-lg hover:bg-primary-700 transition-colors duration-300 flex items-center justify-center"
                 >
@@ -108,7 +111,7 @@ const Products = () => {
                     Осталось 2 места на этой неделе
                   </div>
                 </div>
-                
+
                 <div className="space-y-4 mb-8">
                   <h4 className="font-semibold text-gray-900">Что получите:</h4>
                   <div className="flex items-start">
@@ -124,7 +127,7 @@ const Products = () => {
                     <span className="text-gray-700">Видеозапись консультации для повторного просмотра</span>
                   </div>
                 </div>
-                
+
                 <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-8">
                   <div className="flex items-center gap-2 text-yellow-600 font-bold mb-2">
                     <Gift className="h-5 w-5" />
@@ -134,7 +137,7 @@ const Products = () => {
                     Бесплатный краткий анализ вашего дыхания перед первой консультацией
                   </div>
                 </div>
-                
+
                 <div className="flex flex-col items-center mb-8">
                   <div className="flex items-baseline">
                     <span className="text-5xl font-extrabold text-gray-900">5 000</span>
@@ -142,8 +145,8 @@ const Products = () => {
                   </div>
                   <p className="text-gray-500 text-sm mt-1">За 1 занятие 60 минут</p>
                 </div>
-                
-                <button 
+
+                <button
                   onClick={() => handleTelegramRedirect('consultation')}
                   className="w-full bg-primary-600 text-white font-semibold py-4 px-8 rounded-full text-lg shadow-lg hover:bg-primary-700 transition-colors duration-300 flex items-center justify-center"
                 >
@@ -167,7 +170,7 @@ const Products = () => {
                     Скидка -3 000₽ действует 24 часа
                   </div>
                 </div>
-                
+
                 <div className="space-y-4 mb-8">
                   <h4 className="font-semibold text-gray-900">Что получите:</h4>
                   <div className="flex items-start">
@@ -191,7 +194,7 @@ const Products = () => {
                     <span className="text-gray-700">Видеозаписи всех консультаций</span>
                   </div>
                 </div>
-                
+
                 <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-8">
                   <div className="flex items-center gap-2 text-yellow-600 font-bold mb-2">
                     <Gift className="h-5 w-5" />
@@ -208,7 +211,7 @@ const Products = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-col items-center mb-8">
                   <div className="flex items-baseline">
                     <span className="text-5xl font-extrabold text-gray-900">22 000</span>
@@ -218,8 +221,8 @@ const Products = () => {
                   <p className="text-red-600 font-semibold mt-2">Экономия 3 000₽</p>
                   <p className="text-gray-500 text-sm mt-1">4 400₽ за консультацию</p>
                 </div>
-                
-                <button 
+
+                <button
                   onClick={() => handleTelegramRedirect('package5')}
                   className="w-full bg-gradient-to-r from-primary-600 to-primary-700 text-white font-semibold py-4 px-8 rounded-full text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                 >
@@ -232,8 +235,29 @@ const Products = () => {
               </div>
             </div>
           </div>
+
+          {/* ── Блок обратной связи под карточками ── */}
+          <div className="mt-12 pt-10 border-t border-primary-200 text-center">
+            <p className="text-gray-500 text-base mb-4">
+              Telegram не работает? Оставьте заявку — отвечу на почту
+            </p>
+            <button
+              onClick={() => setShowFeedback(true)}
+              className="inline-flex items-center justify-center bg-primary-600 text-white font-semibold py-3 px-8 rounded-full hover:bg-primary-700 transition-colors duration-300 shadow-md"
+            >
+              <MessageCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+              Написать инструктору
+            </button>
+          </div>
+
         </div>
       </SectionTransition>
+
+      {/* ContactForm уже содержит модальное окно и overlay внутри себя */}
+      <ContactForm
+        isOpen={showFeedback}
+        onClose={() => setShowFeedback(false)}
+      />
     </section>
   );
 };
