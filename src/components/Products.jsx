@@ -1,23 +1,87 @@
 import React, { useState } from 'react';
-import { Check, Gift, Send, Clock, MessageCircle } from 'lucide-react';
+import { Check, Send, MessageCircle, Clock } from 'lucide-react';
 import SectionTransition from './SectionTransition';
 import ContactForm from './ContactForm';
 
 const TELEGRAM_BOT = 'breathing_opros_bot';
 
+const plans = [
+  {
+    id: 'trial',
+    badge: 'Начните здесь',
+    badgeColor: '#2D6A4F',
+    badgeBg: '#D8F3DC',
+    title: 'Пробное занятие',
+    subtitle: 'Почувствуйте результат за 60 минут',
+    price: '1 500',
+    unit: '₽ за занятие',
+    forWhom: null,
+    features: [
+      'Опрос состояния и жалоб',
+      'Теоретическая часть с презентацией',
+      'Измерение контрольной паузы до и после',
+      'Наблюдение за дыханием + основное упражнение',
+      'Домашнее задание и личная обратная связь',
+    ],
+    cta: 'Записаться',
+    ctaKey: 'trial',
+    highlight: false,
+  },
+  {
+    id: 'intensive',
+    badge: 'Быстрый результат',
+    badgeColor: '#7B4F00',
+    badgeBg: '#FFF3CD',
+    title: 'Недельный интенсив',
+    subtitle: '7 дней подряд — формируем привычку правильного дыхания',
+    price: '14 000',
+    unit: '₽ за неделю',
+    forWhom: 'Тем, кому нужен быстрый результат и ежедневный контроль',
+    features: [
+      '7 занятий по 30 минут каждый день',
+      'Чистая практика без теории — только упражнения',
+      'Контроль правильности выполнения в реальном времени',
+      'Поддержка в Telegram между занятиями',
+      'Измерение КП каждый день — видите прогресс',
+    ],
+    cta: 'Записаться',
+    ctaKey: 'intensive',
+    highlight: false,
+  },
+  {
+    id: 'course',
+    badge: 'Лучший выбор',
+    badgeColor: '#1a3a5c',
+    badgeBg: '#DBEAFE',
+    title: 'Курс 5 занятий',
+    subtitle: 'Полная программа метода Бутейко под личным контролем',
+    price: '25 000',
+    unit: '₽ за курс',
+    forWhom: 'Тем, кто хочет системный результат без спешки',
+    features: [
+      '5 занятий по 60 минут раз в неделю',
+      'Полная программа: теория + практика + домашние задания',
+      'Измерение КП на каждом занятии — отслеживаем динамику',
+      'Поддержка в Telegram между занятиями',
+      'Видеозаписи всех занятий',
+    ],
+    note: '3 000 ₽ за занятие вместо 5 000 ₽',
+    cta: 'Начать курс',
+    ctaKey: 'course',
+    highlight: true,
+  },
+];
+
 const Products = () => {
   const [showFeedback, setShowFeedback] = useState(false);
 
-  // 🎯 КОМБИНИРОВАННЫЕ МЕТКИ: источник + продукт
-  // Формат: websiteCtaStarter (camelCase - Telegram удаляет - и _)
-  // Позволяет отслеживать И откуда пришёл И что выбрал
-  const handleTelegramRedirect = (product) => {
+  const handleTelegramRedirect = (key) => {
     const links = {
-      starter: `https://t.me/${TELEGRAM_BOT}?start=websiteCtaStarter`,
-      consultation: `https://t.me/${TELEGRAM_BOT}?start=websiteCtaConsultation`,
-      package5: `https://t.me/${TELEGRAM_BOT}?start=websiteCtaPackage5`
+      trial:     `https://t.me/${TELEGRAM_BOT}?start=websiteCtaTrial`,
+      intensive: `https://t.me/${TELEGRAM_BOT}?start=websiteCtaIntensive`,
+      course:    `https://t.me/${TELEGRAM_BOT}?start=websiteCtaCourse`,
     };
-    window.open(links[product], '_blank');
+    window.open(links[key], '_blank');
   };
 
   return (
@@ -29,214 +93,75 @@ const Products = () => {
               Выберите формат обучения методу Бутейко
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              От первого знакомства до полного сопровождения — выберите подходящий вариант
+              От первого знакомства до устойчивого результата — каждый шаг подготавливает к следующему
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Стартовый комплект */}
-            <div id="basic" className="bg-white rounded-2xl shadow-xl group hover:shadow-2xl transition-all duration-300">
-              <div className="relative p-8">
-                <div className="absolute -top-6 -right-6 bg-gradient-to-r from-green-500 to-teal-500 text-white px-6 py-2 rounded-xl text-lg transform rotate-12 shadow-lg font-bold z-10 whitespace-nowrap">
-                  💎 Самый доступный старт 💎
-                </div>
-                <div className="bg-teal-50 rounded-xl p-4 mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900">Стартовый комплект</h3>
-                  <p className="text-gray-600 mt-2">Первое знакомство с методом Бутейко</p>
-                  <div className="mt-2 inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
-                    ⚡️ Мгновенный доступ
+            {plans.map((plan) => (
+              <div
+                key={plan.id}
+                id={plan.id}
+                className={`bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 flex flex-col${plan.highlight ? ' ring-2 ring-primary-500' : ''}`}
+              >
+                <div className="relative p-8 flex flex-col flex-1">
+                  {/* Бейдж */}
+                  <div
+                    className="inline-block self-start px-4 py-1 rounded-full text-sm font-semibold mb-4"
+                    style={{ background: plan.badgeBg, color: plan.badgeColor }}
+                  >
+                    {plan.badge}
                   </div>
-                </div>
 
-                <div className="space-y-4 mb-8">
-                  <h4 className="font-semibold text-gray-900">Что получите:</h4>
-                  <div className="flex items-start">
-                    <Check className="h-5 w-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">Видеоурок 40 минут по методу Бутейко</span>
-                  </div>
-                  <div className="flex items-start">
-                    <Check className="h-5 w-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">PDF-инструкция для самостоятельной практики</span>
-                  </div>
-                  <div className="flex items-start">
-                    <Check className="h-5 w-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">Доступ к материалам навсегда</span>
-                  </div>
-                </div>
+                  <h3 className="text-2xl font-bold text-gray-900">{plan.title}</h3>
+                  <p className="text-gray-600 mt-1 mb-4">{plan.subtitle}</p>
 
-                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-8">
-                  <div className="flex items-center gap-2 text-yellow-600 font-bold mb-2">
-                    <Gift className="h-5 w-5" />
-                    <span>Бонус:</span>
-                  </div>
-                  <div className="text-yellow-800 flex items-start">
-                    <Check className="h-4 w-4 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>Урок по замеру контрольной паузы (CO₂)</span>
-                  </div>
-                </div>
+                  {/* Для кого */}
+                  {plan.forWhom && (
+                    <p className="text-sm text-primary-700 bg-primary-50 rounded-lg px-3 py-2 mb-4">
+                      <span className="font-semibold">Для кого:</span> {plan.forWhom}
+                    </p>
+                  )}
 
-                <div className="flex flex-col items-center mb-8">
-                  <div className="flex items-baseline">
-                    <span className="text-5xl font-extrabold text-gray-900">990</span>
-                    <span className="text-xl text-gray-500 ml-1">₽</span>
-                    <span className="ml-3 text-lg text-gray-400 line-through">2 600 ₽</span>
-                    <span className="ml-2 text-sm bg-red-100 text-red-600 px-2 py-1 rounded-full font-medium">-62%</span>
-                  </div>
-                </div>
+                  {/* Фичи */}
+                  <ul className="space-y-3 mb-6 flex-1">
+                    {plan.features.map((f, i) => (
+                      <li key={i} className="flex items-start">
+                        <Check className="h-5 w-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700">{f}</span>
+                      </li>
+                    ))}
+                  </ul>
 
-                <button
-                  onClick={() => handleTelegramRedirect('starter')}
-                  className="w-full bg-primary-600 text-white font-semibold py-4 px-8 rounded-full text-lg shadow-lg hover:bg-primary-700 transition-colors duration-300 flex items-center justify-center"
-                >
-                  <Send className="h-5 w-5 mr-2" />
-                  Получить доступ
-                </button>
-                <p className="text-center text-sm text-gray-500 mt-4">
-                  Доступ открывается мгновенно после оплаты
-                </p>
-              </div>
-            </div>
-
-            {/* Разовая консультация */}
-            <div id="consultation" className="bg-white rounded-2xl shadow-xl group hover:shadow-2xl transition-all duration-300">
-              <div className="relative p-8">
-                <div className="absolute -top-6 -right-6 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-xl text-lg transform rotate-12 shadow-lg font-bold z-10 whitespace-nowrap">
-                  ⭐️ Персональный подход ⭐️
-                </div>
-                <div className="bg-teal-50 rounded-xl p-4 mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900">Разовая консультация</h3>
-                  <p className="text-gray-600 mt-2">Персональное занятие 1:1</p>
-                  <div className="mt-2 inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-base font-semibold">
-                    <Clock className="h-5 w-5 animate-pulse" />
-                    Осталось 2 места на этой неделе
-                  </div>
-                </div>
-
-                <div className="space-y-4 mb-8">
-                  <h4 className="font-semibold text-gray-900">Что получите:</h4>
-                  <div className="flex items-start">
-                    <Check className="h-5 w-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">Разбор вашей техники дыхания</span>
-                  </div>
-                  <div className="flex items-start">
-                    <Check className="h-5 w-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">Работа с вашими запросами</span>
-                  </div>
-                  <div className="flex items-start">
-                    <Check className="h-5 w-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">Видеозапись консультации для повторного просмотра</span>
-                  </div>
-                </div>
-
-                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-8">
-                  <div className="flex items-center gap-2 text-yellow-600 font-bold mb-2">
-                    <Gift className="h-5 w-5" />
-                    <span>Ваш бонус:</span>
-                  </div>
-                  <div className="text-yellow-800 font-medium">
-                    Бесплатный краткий анализ вашего дыхания перед первой консультацией
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-center mb-8">
-                  <div className="flex items-baseline">
-                    <span className="text-5xl font-extrabold text-gray-900">5 000</span>
-                    <span className="text-xl text-gray-500 ml-1">₽</span>
-                  </div>
-                  <p className="text-gray-500 text-sm mt-1">За 1 занятие 60 минут</p>
-                </div>
-
-                <button
-                  onClick={() => handleTelegramRedirect('consultation')}
-                  className="w-full bg-primary-600 text-white font-semibold py-4 px-8 rounded-full text-lg shadow-lg hover:bg-primary-700 transition-colors duration-300 flex items-center justify-center"
-                >
-                  <Send className="h-5 w-5 mr-2" />
-                  Забронировать
-                </button>
-              </div>
-            </div>
-
-            {/* Пакет 5 занятий */}
-            <div id="package5" className="bg-white rounded-2xl shadow-xl group hover:shadow-2xl transition-all duration-300 ring-2 ring-primary-500">
-              <div className="relative p-8">
-                <div className="absolute -top-6 -right-6 bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-2 rounded-xl text-lg transform rotate-12 shadow-lg font-bold z-10 whitespace-nowrap">
-                  🔥 Лучший выбор 🔥
-                </div>
-                <div className="bg-teal-50 rounded-xl p-4 mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900">Пакет 5 занятий</h3>
-                  <p className="text-gray-600 mt-2">Полное сопровождение + поддержка</p>
-                  <div className="mt-2 inline-flex items-center gap-2 bg-red-100 text-red-800 px-4 py-2 rounded-full text-base font-semibold">
-                    <Clock className="h-5 w-5 animate-pulse" />
-                    Скидка -3 000₽ действует 24 часа
-                  </div>
-                </div>
-
-                <div className="space-y-4 mb-8">
-                  <h4 className="font-semibold text-gray-900">Что получите:</h4>
-                  <div className="flex items-start">
-                    <Check className="h-5 w-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">5 персональных консультаций по 60 минут</span>
-                  </div>
-                  <div className="flex items-start">
-                    <Check className="h-5 w-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">Отслеживание контрольной паузы (CO₂) в динамике</span>
-                  </div>
-                  <div className="flex items-start">
-                    <Check className="h-5 w-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">Персональный план под вашу ситуацию</span>
-                  </div>
-                  <div className="flex items-start">
-                    <Check className="h-5 w-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">Поддержка в Telegram между занятиями</span>
-                  </div>
-                  <div className="flex items-start">
-                    <Check className="h-5 w-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">Видеозаписи всех консультаций</span>
-                  </div>
-                </div>
-
-                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-8">
-                  <div className="flex items-center gap-2 text-yellow-600 font-bold mb-2">
-                    <Gift className="h-5 w-5" />
-                    <span>Ваши бонусы:</span>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-yellow-800 flex items-start">
-                      <Check className="h-4 w-4 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" />
-                      <span>Бесплатный анализ дыхания перед первой консультацией</span>
+                  {/* Цена */}
+                  <div className="flex flex-col items-center mb-2">
+                    <div className="flex items-baseline">
+                      <span className="text-5xl font-extrabold text-gray-900">{plan.price}</span>
+                      <span className="text-xl text-gray-500 ml-1">{plan.unit}</span>
                     </div>
-                    <div className="text-yellow-800 flex items-start">
-                      <Check className="h-4 w-4 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" />
-                      <span>Методичка по методу Бутейко (PDF)</span>
-                    </div>
+                    {plan.note && (
+                      <p className="text-sm text-primary-600 font-medium mt-1">{plan.note}</p>
+                    )}
                   </div>
-                </div>
 
-                <div className="flex flex-col items-center mb-8">
-                  <div className="flex items-baseline">
-                    <span className="text-5xl font-extrabold text-gray-900">22 000</span>
-                    <span className="text-xl text-gray-500 ml-1">₽</span>
-                    <span className="ml-3 text-lg text-gray-400 line-through">25 000 ₽</span>
-                  </div>
-                  <p className="text-red-600 font-semibold mt-2">Экономия 3 000₽</p>
-                  <p className="text-gray-500 text-sm mt-1">4 400₽ за консультацию</p>
+                  {/* CTA */}
+                  <button
+                    onClick={() => handleTelegramRedirect(plan.ctaKey)}
+                    className={`w-full mt-6 font-semibold py-4 px-8 rounded-full text-lg shadow-lg flex items-center justify-center transition-all duration-300${
+                      plan.highlight
+                        ? ' bg-primary-600 text-white hover:bg-primary-700 hover:scale-105'
+                        : ' bg-primary-600 text-white hover:bg-primary-700'
+                    }`}
+                  >
+                    <Send className="h-5 w-5 mr-2" />
+                    {plan.cta}
+                  </button>
                 </div>
-
-                <button
-                  onClick={() => handleTelegramRedirect('package5')}
-                  className="w-full bg-gradient-to-r from-primary-600 to-primary-700 text-white font-semibold py-4 px-8 rounded-full text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
-                >
-                  <Send className="h-5 w-5 mr-2" />
-                  Начать обучение
-                </button>
-                <p className="text-center text-sm text-gray-500 mt-4">
-                  🎯 87% клиентов выбирают этот пакет
-                </p>
               </div>
-            </div>
+            ))}
           </div>
 
-          {/* ── Блок обратной связи под карточками ── */}
+          {/* Блок обратной связи */}
           <div className="mt-12 pt-10 border-t border-primary-200 text-center">
             <p className="text-gray-500 text-base mb-4">
               Telegram не работает? Оставьте заявку — отвечу на почту
@@ -249,11 +174,9 @@ const Products = () => {
               Написать инструктору
             </button>
           </div>
-
         </div>
       </SectionTransition>
 
-      {/* ContactForm уже содержит модальное окно и overlay внутри себя */}
       <ContactForm
         isOpen={showFeedback}
         onClose={() => setShowFeedback(false)}
