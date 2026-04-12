@@ -1,19 +1,16 @@
 import React from 'react';
-import { Send, Clock, Gift } from 'lucide-react';
+import { Send, Gift } from 'lucide-react';
 
 const TELEGRAM_BOT = 'breathing_opros_bot';
 
 const BuyCourse = () => {
-  // 🎯 КОМБИНИРОВАННЫЕ МЕТКИ: источник + продукт
-  // Формат: websiteCtaStarter (camelCase - Telegram удаляет - и _)
-  // Позволяет отслеживать И откуда пришёл И что выбрал
-  const handleTelegramRedirect = (product) => {
+  const handleTelegramRedirect = (key) => {
     const links = {
-      starter: `https://t.me/${TELEGRAM_BOT}?start=websiteCtaStarter`,
-      consultation: `https://t.me/${TELEGRAM_BOT}?start=websiteCtaConsultation`,
-      package5: `https://t.me/${TELEGRAM_BOT}?start=websiteCtaPackage5`
+      trial:     `https://t.me/${TELEGRAM_BOT}?start=websiteCtaTrial`,
+      intensive: `https://t.me/${TELEGRAM_BOT}?start=websiteCtaIntensive`,
+      course:    `https://t.me/${TELEGRAM_BOT}?start=websiteCtaCourse`,
     };
-    window.open(links[product], '_blank');
+    window.open(links[key], '_blank');
   };
 
   return (
@@ -29,76 +26,70 @@ const BuyCourse = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {/* Стартовый */}
-          <div className="bg-white rounded-2xl p-8 shadow-2xl transform hover:scale-105 transition-all duration-300">
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Стартовый</h3>
+
+          {/* Пробное занятие */}
+          <div className="bg-white rounded-2xl p-8 shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col">
+            <div className="text-center mb-6 flex-1">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Пробное занятие</h3>
               <div className="flex items-baseline justify-center">
-                <span className="text-4xl font-extrabold text-primary-600">990</span>
+                <span className="text-4xl font-extrabold text-primary-600">1 500</span>
                 <span className="text-xl text-gray-500 ml-1">₽</span>
               </div>
-              <p className="text-sm text-gray-500 mt-2">Первое знакомство</p>
+              <p className="text-sm text-gray-500 mt-2">60 минут, онлайн</p>
             </div>
             <button
-              onClick={() => handleTelegramRedirect('starter')}
+              onClick={() => handleTelegramRedirect('trial')}
               className="w-full bg-primary-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-primary-700 transition-colors duration-300 flex items-center justify-center"
             >
               <Send className="h-5 w-5 mr-2" />
-              Получить доступ
+              Записаться
             </button>
           </div>
 
-          {/* Разовая */}
-          <div className="bg-white rounded-2xl p-8 shadow-2xl transform hover:scale-105 transition-all duration-300">
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Разовая</h3>
+          {/* Недельный интенсив */}
+          <div className="bg-white rounded-2xl p-8 shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col">
+            <div className="text-center mb-6 flex-1">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Недельный интенсив</h3>
               <div className="flex items-baseline justify-center">
-                <span className="text-4xl font-extrabold text-primary-600">5 000</span>
+                <span className="text-4xl font-extrabold text-primary-600">14 000</span>
                 <span className="text-xl text-gray-500 ml-1">₽</span>
               </div>
-              <p className="text-sm text-gray-500 mt-2">1 консультация</p>
-              <div className="mt-3 inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
-                <Clock className="h-4 w-4" />
-                Осталось 2 места
-              </div>
+              <p className="text-sm text-gray-500 mt-2">7 дней × 30 минут</p>
             </div>
             <button
-              onClick={() => handleTelegramRedirect('consultation')}
+              onClick={() => handleTelegramRedirect('intensive')}
               className="w-full bg-primary-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-primary-700 transition-colors duration-300 flex items-center justify-center"
             >
               <Send className="h-5 w-5 mr-2" />
-              Забронировать
+              Записаться
             </button>
           </div>
 
-          {/* Пакет 5 */}
-          <div className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl p-8 shadow-2xl transform hover:scale-105 transition-all duration-300 ring-4 ring-yellow-400">
+          {/* Курс 5 занятий */}
+          <div className="relative bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl p-8 shadow-2xl hover:scale-105 transition-all duration-300 ring-4 ring-yellow-400 flex flex-col">
             <div className="absolute -top-4 -right-4 bg-yellow-400 text-primary-900 px-4 py-2 rounded-xl text-sm font-bold transform rotate-12 shadow-lg">
-              🔥 Хит 🔥
+              🔥 Лучший выбор 🔥
             </div>
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-white mb-2">Пакет 5</h3>
+            <div className="text-center mb-6 flex-1">
+              <h3 className="text-2xl font-bold text-white mb-2">Курс 5 занятий</h3>
               <div className="flex items-baseline justify-center">
-                <span className="text-4xl font-extrabold text-white">22 000</span>
+                <span className="text-4xl font-extrabold text-white">25 000</span>
                 <span className="text-xl text-primary-100 ml-1">₽</span>
               </div>
-              <p className="text-sm text-primary-100 mt-2 line-through">25 000 ₽</p>
-              <p className="text-yellow-300 font-semibold mt-1">Экономия 3 000₽</p>
+              <p className="text-sm text-primary-100 mt-2">5 × 60 мин, раз в неделю</p>
+              <p className="text-yellow-300 font-semibold mt-1">3 000 ₽/занятие вместо 5 000 ₽</p>
               <div className="mt-3 inline-flex items-center gap-2 bg-yellow-400 text-primary-900 px-3 py-1 rounded-full text-sm font-bold">
                 <Gift className="h-4 w-4" />
-                + бонусы
+                Системный результат
               </div>
             </div>
             <button
-              onClick={() => handleTelegramRedirect('package5')}
+              onClick={() => handleTelegramRedirect('course')}
               className="w-full bg-yellow-400 text-primary-900 font-bold py-3 px-6 rounded-xl hover:bg-yellow-300 transition-colors duration-300 flex items-center justify-center shadow-lg"
             >
               <Send className="h-5 w-5 mr-2" />
-              Начать обучение
+              Начать курс
             </button>
-            <p className="text-center text-primary-100 text-sm mt-4">
-              🎯 87% клиентов выбирают этот пакет
-            </p>
           </div>
         </div>
 
