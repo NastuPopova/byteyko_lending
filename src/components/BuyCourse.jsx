@@ -35,7 +35,7 @@ const BuyCourse = () => {
                 <span className="text-4xl font-extrabold text-primary-600">1 500</span>
                 <span className="text-xl text-gray-500 ml-1">₽</span>
               </div>
-              <p className="text-sm text-gray-500 mt-2">60 минут, онлайн</p>
+              <p className="text-sm text-gray-500 mt-2">40 минут, онлайн</p>
             </div>
             <button
               onClick={() => handleTelegramRedirect('trial')}
@@ -77,7 +77,6 @@ const BuyCourse = () => {
                 <span className="text-xl text-primary-100 ml-1">₽</span>
               </div>
               <p className="text-sm text-primary-100 mt-2">5 × 60 мин, раз в неделю</p>
-              <p className="text-yellow-300 font-semibold mt-1">3 000 ₽/занятие вместо 5 000 ₽</p>
               <div className="mt-3 inline-flex items-center gap-2 bg-yellow-400 text-primary-900 px-3 py-1 rounded-full text-sm font-bold">
                 <Gift className="h-4 w-4" />
                 Системный результат
