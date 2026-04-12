@@ -63,7 +63,6 @@ const plans = [
       'Поддержка в Telegram между занятиями',
       'Видеозаписи всех занятий',
     ],
-    note: '3 000 ₽ за занятие вместо 5 000 ₽',
     cta: 'Начать курс',
     ctaKey: 'course',
     highlight: true,
@@ -137,9 +136,6 @@ const Products = () => {
                       <span className="text-5xl font-extrabold text-gray-900">{plan.price}</span>
                       <span className="text-xl text-gray-500 ml-1">{plan.unit}</span>
                     </div>
-                    {plan.note && (
-                      <p className="text-sm text-primary-600 font-medium mt-1">{plan.note}</p>
-                    )}
                   </div>
 
                   {/* CTA */}
