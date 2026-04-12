@@ -1,149 +1,189 @@
+/* ─── ProductComparison ─────────────────────────────────────────────────────── */
+
 .products-comparison {
   padding: 80px 0;
   background: linear-gradient(180deg, #F6FAFA 0%, #FFFFFF 100%);
 }
 
 .products-comparison .container {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 24px;
 }
 
+/* Заголовки */
 .section-title {
-  font-size: 32px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 15px;
+  font-size: 30px;
+  font-weight: 700;
+  color: #1a2e2e;
+  margin-bottom: 12px;
+  line-height: 1.25;
 }
 
 .section-subtitle {
-  font-size: 18px;
-  color: #666;
+  font-size: 17px;
+  color: #5a7070;
   margin-bottom: 40px;
+  line-height: 1.6;
 }
+
+/* ─── Обёртка таблицы ─────────────────────────────────────────────────────── */
 
 .comparison-table-wrapper {
   overflow-x: auto;
-  margin-bottom: 30px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
+  margin-bottom: 28px;
+  box-shadow: 0 2px 24px rgba(0, 100, 90, 0.08);
+  border-radius: 14px;
 }
 
 .comparison-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
-  border-radius: 12px;
+  background: #fff;
+  border-radius: 14px;
   overflow: hidden;
+  font-size: 15px;
+  line-height: 1.5;
 }
+
+/* ─── Ячейки ──────────────────────────────────────────────────────────────── */
 
 .comparison-table th,
 .comparison-table td {
-  padding: 15px 20px;
+  padding: 14px 18px;
   text-align: center;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #eef2f2;
+  vertical-align: middle;
 }
 
-.feature-header {
+/* Первая колонка — название характеристики */
+.feature-header,
+.comparison-table td.feature-name {
   text-align: left !important;
-  background: #f8f9fa;
+  color: #3d5656;
   font-weight: 600;
-  color: #444;
+  font-size: 14px;
+  white-space: nowrap;
+  min-width: 160px;
+  background: #f7fafa;
 }
+
+/* ─── Шапка — названия продуктов ────────────────────────────────────────── */
 
 .product-header {
-  background: #f8f9fa;
-  min-width: 200px;
+  background: #f7fafa;
+  min-width: 190px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  position: relative;
+  vertical-align: top;
 }
 
 .product-header.highlight {
-  background: rgba(0, 166, 156, 0.1);
-  position: relative;
+  background: #edf8f7;
 }
 
+.product-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.badge-green  { background: #d8f3dc; color: #2D6A4F; }
+.badge-amber  { background: #fff3cd; color: #7B4F00; }
+.badge-blue   { background: #dbeafe; color: #1a3a5c; }
+
 .product-name {
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 10px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a2e2e;
+  margin-bottom: 6px;
 }
 
 .product-price {
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 26px;
+  font-weight: 800;
   color: #00A69C;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
+  letter-spacing: -0.5px;
 }
 
-.old-price {
-  text-decoration: line-through;
-  color: #999;
-  font-size: 16px;
-  margin-bottom: 5px;
+.product-meta {
+  font-size: 13px;
+  color: #7a9090;
 }
 
-.discount-badge {
-  display: inline-block;
-  background: #FF6B6B;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: bold;
+.product-note {
+  font-size: 12px;
+  color: #00A69C;
+  font-weight: 600;
+  margin-top: 4px;
 }
 
 .bestseller-tag {
   position: absolute;
   top: 0;
-  right: 20px;
-  background: #FF6B6B;
-  color: white;
-  padding: 4px 12px;
+  right: 18px;
+  background: #00A69C;
+  color: #fff;
+  padding: 4px 14px;
   border-radius: 0 0 8px 8px;
-  font-size: 14px;
-  font-weight: bold;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
 }
 
-.feature-name {
-  text-align: left !important;
-  font-weight: 500;
-  color: #444;
-}
+/* ─── Тело таблицы ─────────────────────────────────────────────────────────── */
 
-.yes-icon {
-  color: #00A69C;
-  font-weight: bold;
-}
-
-.no-icon {
-  color: #FF6B6B;
-  font-weight: bold;
-}
-
-.partial-icon {
-  color: #FFA500;
-}
-
+/* Групповые заголовки */
 .category-row td {
-  background: #f8f9fa;
-  font-weight: bold;
-  color: #333;
+  background: #e9f6f5;
+  font-weight: 700;
+  font-size: 13px;
+  color: #007a72;
   text-align: left !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-bottom: none;
 }
 
+/* Чётные строки */
+.comparison-table tbody tr:nth-child(even):not(.category-row):not(.action-row) {
+  background: #fbfefe;
+}
+
+/* Иконки */
+.yes-icon  { color: #00A69C; font-weight: 700; font-size: 16px; }
+.no-icon   { color: #b0c8c8; font-weight: 700; font-size: 18px; }
+.part-icon { color: #e09f3e; font-size: 16px; }
+
+/* Строка кнопок */
 .action-row td {
   border-bottom: none;
-  padding-top: 20px;
-  padding-bottom: 20px;
+  padding-top: 22px;
+  padding-bottom: 22px;
+  background: #f7fafa;
 }
+
+/* ─── CTA-кнопки ──────────────────────────────────────────────────────────── */
 
 .cta-button {
   display: inline-block;
-  padding: 10px 20px;
-  border-radius: 25px;
-  text-decoration: none;
+  padding: 10px 22px;
+  border-radius: 30px;
+  font-size: 14px;
   font-weight: 600;
-  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  transition: all 0.25s ease;
+  white-space: nowrap;
 }
 
 .cta-small {
@@ -170,46 +210,36 @@
   transform: translateY(-2px);
 }
 
+/* Сноска */
 .table-footnote {
   text-align: center;
-  color: #666;
-  font-size: 14px;
+  color: #7a9090;
+  font-size: 13px;
   font-style: italic;
+  line-height: 1.6;
+  padding: 0 16px;
 }
 
-/* Адаптивность */
+/* ─── Адаптив ──────────────────────────────────────────────────────────────── */
+
 @media (max-width: 768px) {
-  .products-comparison {
-    padding: 40px 0;
-  }
-
-  .section-title {
-    font-size: 24px;
-  }
-
-  .section-subtitle {
-    font-size: 16px;
-  }
+  .products-comparison { padding: 48px 0; }
+  .section-title  { font-size: 22px; }
+  .section-subtitle { font-size: 15px; }
 
   .comparison-table th,
   .comparison-table td {
-    padding: 10px;
-    font-size: 14px;
+    padding: 10px 12px;
+    font-size: 13px;
   }
 
-  .product-name {
-    font-size: 16px;
-  }
+  .product-name  { font-size: 14px; }
+  .product-price { font-size: 20px; }
+  .product-meta  { font-size: 11px; }
 
-  .product-price {
-    font-size: 20px;
-  }
-
-  .old-price {
-    font-size: 14px;
-  }
-
-  .discount-badge {
+  .feature-header,
+  .comparison-table td.feature-name {
+    min-width: 110px;
     font-size: 12px;
   }
-} 
+}
