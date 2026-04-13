@@ -1,9 +1,13 @@
 // =============================================
 // МОДАЛЬНОЕ ОКНО ДИАГНОСТИКИ ДЫХАНИЯ
-// Часть 3 — персональный результат на сайте
+// Часть 4 — сбор лидов + отправка в Telegram
 // =============================================
 
 (function () {
+
+  // --- Конфиг отправки ---
+  var TG_BOT_TOKEN = '7416243262:AAE8mDCuV2o9FtYE_iO8sVsn8Sg-db3CfaM';
+  var TG_CHAT_ID   = '981828628';
 
   // --- HTML модалки ---
   var modalHTML = `
@@ -75,6 +79,47 @@
           </div>
         </div>
 
+        <!-- ЭКРАН СБОРА КОНТАКТОВ (НОВЫЙ) -->
+        <div id="diagLeadForm" class="diag-screen" style="display:none">
+          <div class="diag-lead-wrap">
+            <div class="diag-lead-icon">🎯</div>
+            <h3 class="diag-lead-title">Ваш результат готов!</h3>
+            <p class="diag-lead-desc">Укажите контакты — и мы покажем персональный результат и свяжемся с вами для консультации.</p>
+
+            <form id="diagLeadFormEl" class="diag-lead-form" novalidate>
+
+              <div class="diag-field">
+                <label class="diag-label" for="leadName">Ваше имя <span class="diag-req">*</span></label>
+                <input class="diag-input" type="text" id="leadName" name="name" placeholder="Например: Мария" required autocomplete="given-name">
+                <span class="diag-field-error" id="errName"></span>
+              </div>
+
+              <div class="diag-field">
+                <label class="diag-label" for="leadPhone">Телефон <span class="diag-req">*</span></label>
+                <input class="diag-input" type="tel" id="leadPhone" name="phone" placeholder="+7 (999) 000-00-00" required autocomplete="tel">
+                <span class="diag-field-error" id="errPhone"></span>
+              </div>
+
+              <div class="diag-field">
+                <label class="diag-label" for="leadEmail">Email <span class="diag-req">*</span></label>
+                <input class="diag-input" type="email" id="leadEmail" name="email" placeholder="you@example.com" required autocomplete="email">
+                <span class="diag-field-error" id="errEmail"></span>
+              </div>
+
+              <div class="diag-field">
+                <label class="diag-label" for="leadTg">Telegram (необязательно)</label>
+                <input class="diag-input" type="text" id="leadTg" name="tg" placeholder="@username">
+              </div>
+
+              <button type="submit" class="diag-btn-primary diag-btn-submit" id="diagLeadSubmit">
+                Получить результат →
+              </button>
+
+              <p class="diag-lead-privacy">🔒 Данные защищены · Не передаём третьим лицам · Без спама</p>
+            </form>
+          </div>
+        </div>
+
         <!-- ЭКРАН РЕЗУЛЬТАТА -->
         <div id="diagResult" class="diag-screen" style="display:none">
 
@@ -137,6 +182,7 @@
   var startBtn     = document.getElementById('diagStartBtn');
   var diagStart    = document.getElementById('diagStart');
   var diagQs       = document.getElementById('diagQuestions');
+  var diagLeadForm = document.getElementById('diagLeadForm');
   var diagResult   = document.getElementById('diagResult');
   var progressWrap = document.getElementById('diagProgressWrap');
   var progressFill = document.getElementById('diagProgressFill');
@@ -148,15 +194,17 @@
   var selectedCnt  = document.getElementById('diagSelectedCount');
   var backBtn      = document.getElementById('diagBackBtn');
   var nextBtn      = document.getElementById('diagNextBtn');
+  var leadFormEl   = document.getElementById('diagLeadFormEl');
 
-  // --- Движок ---
+  // --- Движок и кэш результата ---
   var engine = null;
   var currentId = null;
   var multiSelections = [];
+  var cachedResult = null;
 
   // --- Утилиты ---
   function showScreen(el) {
-    [diagStart, diagQs, diagResult].forEach(function(s) {
+    [diagStart, diagQs, diagLeadForm, diagResult].forEach(function(s) {
       s.style.display = 'none';
       s.classList.remove('diag-screen--active');
     });
@@ -265,24 +313,37 @@
     optionsWrap.appendChild(wrap);
   }
 
-  // --- Завершение анкеты: показ персонального результата ---
+  // --- Завершение анкеты: показываем форму лидов ---
   function finishSurvey() {
     progressWrap.style.display = 'none';
 
-    if (typeof BreathingAnalysis === 'undefined') {
-      // Fallback если analysis.js не загружен
-      showScreen(diagResult);
+    // Считаем результат и кэшируем
+    if (typeof BreathingAnalysis !== 'undefined') {
+      var analysis = new BreathingAnalysis();
+      cachedResult = analysis.analyze(engine.answers);
+      cachedResult._analysis = analysis;
+    } else {
+      cachedResult = null;
+    }
+
+    // Показываем форму контактов
+    showScreen(diagLeadForm);
+  }
+
+  // --- Заполнение и показ экрана результата ---
+  function showResult() {
+    if (!cachedResult) {
       document.getElementById('diagResTechnique').textContent = 'Базовое носовое дыхание Бутейко';
       document.getElementById('diagResTagline').textContent = 'Персональная техника подобрана по вашим ответам.';
+      showScreen(diagResult);
       return;
     }
 
-    var analysis = new BreathingAnalysis();
-    var result   = analysis.analyze(engine.answers);
+    var result   = cachedResult;
+    var analysis = cachedResult._analysis;
     var msg      = result.message;
     var segLabel = analysis.segmentLabel(result.segment);
 
-    // Заполняем экран результата
     document.getElementById('diagResProfile').textContent = result.profileName;
 
     var levelEl = document.getElementById('diagResLevelValue');
@@ -294,11 +355,8 @@
     document.getElementById('diagResSpeed').textContent     = msg.speed;
     document.getElementById('diagResWhy').textContent       = msg.why;
     document.getElementById('diagResCta').textContent       = msg.cta;
+    document.getElementById('diagResBadge').textContent     = result.isChild ? '🧸' : '🎯';
 
-    // Значок
-    document.getElementById('diagResBadge').textContent = result.isChild ? '🧸' : '🎯';
-
-    // Отзывы
     var reviewsList = document.getElementById('diagResReviews');
     reviewsList.innerHTML = '';
     msg.reviews.forEach(function(r) {
@@ -307,7 +365,6 @@
       reviewsList.appendChild(li);
     });
 
-    // Анимация появления
     diagResult.style.opacity = '0';
     showScreen(diagResult);
     setTimeout(function() {
@@ -316,12 +373,110 @@
     }, 30);
   }
 
+  // --- Отправка лида в Telegram ---
+  function sendLeadToTelegram(lead, resultData) {
+    var segment  = resultData ? resultData.segment  : '—';
+    var profile  = resultData ? resultData.profileName : '—';
+    var tech     = resultData ? '«' + resultData.message.techniqueName + '»' : '—';
+
+    var tgText =
+      '🌐 <b>Новый лид с сайта (анкета)</b>\n\n' +
+      '👤 <b>Имя:</b> ' + escHtml(lead.name) + '\n' +
+      '📱 <b>Телефон:</b> ' + escHtml(lead.phone) + '\n' +
+      '📧 <b>Email:</b> ' + escHtml(lead.email) + '\n' +
+      (lead.tg ? '✈️ <b>Telegram:</b> ' + escHtml(lead.tg) + '\n' : '') +
+      '\n' +
+      '📊 <b>Результат диагностики:</b>\n' +
+      '  • Сегмент: ' + segment + '\n' +
+      '  • Профиль: ' + escHtml(profile) + '\n' +
+      '  • Техника: ' + escHtml(tech) + '\n' +
+      '\n' +
+      '🕐 ' + new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
+
+    fetch('https://api.telegram.org/bot' + TG_BOT_TOKEN + '/sendMessage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: TG_CHAT_ID,
+        text: tgText,
+        parse_mode: 'HTML'
+      })
+    }).catch(function() {
+      // Тихий fallback — не блокируем UX при ошибке сети
+    });
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  // --- Валидация формы лидов ---
+  function validateLead() {
+    var ok = true;
+
+    var name  = document.getElementById('leadName').value.trim();
+    var phone = document.getElementById('leadPhone').value.trim();
+    var email = document.getElementById('leadEmail').value.trim();
+
+    document.getElementById('errName').textContent  = '';
+    document.getElementById('errPhone').textContent = '';
+    document.getElementById('errEmail').textContent = '';
+
+    if (!name) {
+      document.getElementById('errName').textContent = 'Введите ваше имя';
+      ok = false;
+    }
+    if (!phone || phone.replace(/\D/g,'').length < 10) {
+      document.getElementById('errPhone').textContent = 'Введите корректный номер телефона';
+      ok = false;
+    }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('errEmail').textContent = 'Введите корректный email';
+      ok = false;
+    }
+
+    return ok;
+  }
+
+  // --- Сабмит формы лидов ---
+  leadFormEl.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    if (!validateLead()) return;
+
+    var submitBtn = document.getElementById('diagLeadSubmit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Отправляем...';
+
+    var lead = {
+      name:  document.getElementById('leadName').value.trim(),
+      phone: document.getElementById('leadPhone').value.trim(),
+      email: document.getElementById('leadEmail').value.trim(),
+      tg:    document.getElementById('leadTg').value.trim()
+    };
+
+    sendLeadToTelegram(lead, cachedResult);
+
+    // Показываем результат через 600ms (не ждём ответа сервера — UX важнее)
+    setTimeout(function() {
+      showResult();
+    }, 600);
+  });
+
   // --- Открыть / закрыть ---
   function openDiag() {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     showScreen(diagStart);
     progressWrap.style.display = 'none';
+    cachedResult = null;
+    leadFormEl.reset();
+    ['errName','errPhone','errEmail'].forEach(function(id) {
+      document.getElementById(id).textContent = '';
+    });
   }
 
   function closeDiag() {
