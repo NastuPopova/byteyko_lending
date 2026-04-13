@@ -1,6 +1,6 @@
 // =============================================
 // МОДАЛЬНОЕ ОКНО ДИАГНОСТИКИ ДЫХАНИЯ
-// Часть 2 — полный движок с реальными вопросами
+// Часть 3 — персональный результат на сайте
 // =============================================
 
 (function () {
@@ -77,16 +77,51 @@
 
         <!-- ЭКРАН РЕЗУЛЬТАТА -->
         <div id="diagResult" class="diag-screen" style="display:none">
-          <div class="diag-result-icon">🎉</div>
-          <h3 class="diag-result-title">Диагностика завершена!</h3>
-          <p class="diag-result-text">Спасибо за честные ответы. Мы подготовили персональный анализ вашего дыхания.</p>
-          <div class="diag-result-cta">
-            <p class="diag-result-cta-label">Получите полный результат и персональные рекомендации прямо сейчас:</p>
-            <a href="https://t.me/spokoinoe_dyhanie?start=website_test" target="_blank" rel="noopener noreferrer" class="diag-btn-primary diag-btn-tg">
-              📲 Получить результат в Telegram
-            </a>
-            <p class="diag-result-note">Бесплатно · Результат за 2 минуты</p>
+
+          <!-- Значок и заголовок -->
+          <div class="diag-res-header">
+            <div class="diag-res-badge" id="diagResBadge">🎯</div>
+            <h3 class="diag-res-title">Ваш персональный результат</h3>
+            <p class="diag-res-profile" id="diagResProfile"></p>
           </div>
+
+          <!-- Уровень нарушения -->
+          <div class="diag-res-level" id="diagResLevel">
+            <span class="diag-res-level-label">Уровень нарушения дыхания:</span>
+            <span class="diag-res-level-value" id="diagResLevelValue">—</span>
+          </div>
+
+          <!-- Карточка техники -->
+          <div class="diag-res-card">
+            <div class="diag-res-card-top">
+              <span class="diag-res-tag">Персональная техника Бутейко</span>
+              <h4 class="diag-res-technique" id="diagResTechnique">—</h4>
+              <p class="diag-res-tagline" id="diagResTagline"></p>
+            </div>
+            <p class="diag-res-speed" id="diagResSpeed"></p>
+          </div>
+
+          <!-- Отзывы (что отмечают) -->
+          <div class="diag-res-reviews">
+            <p class="diag-res-reviews-title">Клиенты отмечают:</p>
+            <ul class="diag-res-reviews-list" id="diagResReviews"></ul>
+          </div>
+
+          <!-- Почему работает -->
+          <div class="diag-res-why">
+            <p class="diag-res-why-title">Почему это работает именно для вас</p>
+            <p class="diag-res-why-text" id="diagResWhy"></p>
+          </div>
+
+          <!-- CTA -->
+          <div class="diag-res-cta">
+            <p class="diag-res-cta-note" id="diagResCta"></p>
+            <a href="https://t.me/spokoinoe_dyhanie?start=website_result" target="_blank" rel="noopener noreferrer" class="diag-btn-primary diag-btn-tg">
+              📲 Записаться на пробное занятие — 1 500 ₽
+            </a>
+            <p class="diag-res-final-note">Бесплатная консультация · Результат за 2 минуты</p>
+          </div>
+
         </div>
 
       </div>
@@ -114,10 +149,10 @@
   var backBtn      = document.getElementById('diagBackBtn');
   var nextBtn      = document.getElementById('diagNextBtn');
 
-  // --- Движок (из survey-questions.js) ---
+  // --- Движок ---
   var engine = null;
   var currentId = null;
-  var multiSelections = []; // для multiple-вопросов
+  var multiSelections = [];
 
   // --- Утилиты ---
   function showScreen(el) {
@@ -143,33 +178,24 @@
     var q = engine.getQuestion(id);
     if (!q) { finishSurvey(); return; }
 
-    // Текст
     qText.textContent = q.text;
     qSub.textContent  = q.sub || '';
     qSub.style.display = q.sub ? 'block' : 'none';
 
-    // Прогресс
     updateProgress(id);
 
-    // Кнопка назад
     backBtn.style.display = (q.allowBack && engine.history.length >= 1) ? 'inline-flex' : 'none';
     nextBtn.style.display = 'none';
 
-    // Очищаем варианты
     optionsWrap.innerHTML = '';
     multiSelections = [];
     multiHint.style.display = 'none';
     selectedCnt.textContent = 'Выбрано: 0';
 
-    if (q.type === 'scale') {
-      renderScale(q);
-    } else if (q.type === 'multiple') {
-      renderMultiple(q);
-    } else {
-      renderSingle(q);
-    }
+    if (q.type === 'scale')         renderScale(q);
+    else if (q.type === 'multiple') renderMultiple(q);
+    else                            renderSingle(q);
 
-    // Анимация появления
     optionsWrap.style.opacity = '0';
     setTimeout(function() {
       optionsWrap.style.transition = 'opacity 0.25s ease';
@@ -184,8 +210,7 @@
       btn.textContent = opt.label;
       btn.addEventListener('click', function() {
         engine.saveAnswer(q.id, opt.value);
-        var next = engine.getNext(q.id);
-        renderQuestion(next);
+        renderQuestion(engine.getNext(q.id));
       });
       optionsWrap.appendChild(btn);
     });
@@ -214,7 +239,6 @@
       });
       optionsWrap.appendChild(btn);
     });
-
     nextBtn.style.display = 'none';
     nextBtn.onclick = function() {
       if (multiSelections.length < (q.minSelections || 1)) return;
@@ -241,17 +265,61 @@
     optionsWrap.appendChild(wrap);
   }
 
-  // --- Завершение ---
+  // --- Завершение анкеты: показ персонального результата ---
   function finishSurvey() {
     progressWrap.style.display = 'none';
+
+    if (typeof BreathingAnalysis === 'undefined') {
+      // Fallback если analysis.js не загружен
+      showScreen(diagResult);
+      document.getElementById('diagResTechnique').textContent = 'Базовое носовое дыхание Бутейко';
+      document.getElementById('diagResTagline').textContent = 'Персональная техника подобрана по вашим ответам.';
+      return;
+    }
+
+    var analysis = new BreathingAnalysis();
+    var result   = analysis.analyze(engine.answers);
+    var msg      = result.message;
+    var segLabel = analysis.segmentLabel(result.segment);
+
+    // Заполняем экран результата
+    document.getElementById('diagResProfile').textContent = result.profileName;
+
+    var levelEl = document.getElementById('diagResLevelValue');
+    levelEl.textContent = segLabel;
+    levelEl.className = 'diag-res-level-value diag-res-level--' + result.segment.toLowerCase();
+
+    document.getElementById('diagResTechnique').textContent = '«' + msg.techniqueName + '»';
+    document.getElementById('diagResTagline').textContent   = msg.tagline;
+    document.getElementById('diagResSpeed').textContent     = msg.speed;
+    document.getElementById('diagResWhy').textContent       = msg.why;
+    document.getElementById('diagResCta').textContent       = msg.cta;
+
+    // Значок
+    document.getElementById('diagResBadge').textContent = result.isChild ? '🧸' : '🎯';
+
+    // Отзывы
+    var reviewsList = document.getElementById('diagResReviews');
+    reviewsList.innerHTML = '';
+    msg.reviews.forEach(function(r) {
+      var li = document.createElement('li');
+      li.textContent = r;
+      reviewsList.appendChild(li);
+    });
+
+    // Анимация появления
+    diagResult.style.opacity = '0';
     showScreen(diagResult);
+    setTimeout(function() {
+      diagResult.style.transition = 'opacity 0.4s ease';
+      diagResult.style.opacity = '1';
+    }, 30);
   }
 
   // --- Открыть / закрыть ---
   function openDiag() {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    // Сброс
     showScreen(diagStart);
     progressWrap.style.display = 'none';
   }
@@ -274,7 +342,7 @@
     renderQuestion(firstId);
   });
 
-  // --- Кнопка Назад ---
+  // --- Назад ---
   backBtn.addEventListener('click', function() {
     var prev = engine.goBack();
     if (prev) renderQuestion(prev);
@@ -292,7 +360,6 @@
     if (e.target.closest('[data-open-diag]')) openDiag();
   });
 
-  // Экспорт
   window.DiagnosisModal = { open: openDiag, close: closeDiag };
 
 })();
