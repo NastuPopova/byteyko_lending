@@ -19,6 +19,30 @@ app.use((req, res, next) => {
   next();
 });
 
+// ===== Короткие ссылки → бот =====
+const BOT = 'https://t.me/breathing_opros_bot';
+
+// Пробное занятие
+app.get('/trial', (req, res) => {
+  res.redirect(301, `${BOT}?start=websiteCtaTrial`);
+});
+
+// Недельный интенсив
+app.get('/week', (req, res) => {
+  res.redirect(301, `${BOT}?start=websiteCtaIntensive`);
+});
+
+// Курс 5 занятий
+app.get('/course', (req, res) => {
+  res.redirect(301, `${BOT}?start=websiteCtaCourse`);
+});
+
+// Просто открыть бот (главная)
+app.get('/bot', (req, res) => {
+  res.redirect(301, `${BOT}?start=website`);
+});
+// =================================
+
 // Базовый маршрут
 app.get('/', (req, res) => {
   res.send('Сервер работает');
@@ -27,4 +51,4 @@ app.get('/', (req, res) => {
 // Запуск сервера
 app.listen(port, () => {
   console.log(`Сервер успешно запущен на порту ${port}`);
-}); 
+});
