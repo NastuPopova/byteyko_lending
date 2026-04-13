@@ -1,11 +1,12 @@
 // =============================================
 // МОДАЛЬНОЕ ОКНО ДИАГНОСТИКИ ДЫХАНИЯ
-// Часть 1 — скелет, готов к наполнению анкетой
+// Часть 2 — полный движок с реальными вопросами
 // =============================================
 
 (function () {
-  // --- Создаём HTML модалки динамически ---
-  const modalHTML = `
+
+  // --- HTML модалки ---
+  var modalHTML = `
   <div id="diagnosisModal" class="diag-overlay" role="dialog" aria-modal="true" aria-labelledby="diagModalTitle" style="display:none">
     <div class="diag-container">
       <button class="diag-close" id="diagCloseBtn" aria-label="Закрыть">&times;</button>
@@ -26,15 +27,15 @@
         </div>
       </div>
 
-      <!-- Прогресс-бар (скрыт до старта) -->
+      <!-- Прогресс-бар -->
       <div class="diag-progress-wrap" id="diagProgressWrap" style="display:none">
         <div class="diag-progress-bar">
           <div class="diag-progress-fill" id="diagProgressFill" style="width:0%"></div>
         </div>
-        <span class="diag-progress-label" id="diagProgressLabel">Шаг 1</span>
+        <span class="diag-progress-label" id="diagProgressLabel">Шаг 1 из 16</span>
       </div>
 
-      <!-- Контент-зона (стартовый экран / вопросы / результат) -->
+      <!-- Контент -->
       <div class="diag-content" id="diagContent">
 
         <!-- СТАРТОВЫЙ ЭКРАН -->
@@ -58,15 +59,33 @@
           <p class="diag-start-note">🔒 Без регистрации · Результат сразу</p>
         </div>
 
-        <!-- ЭКРАН ВОПРОСОВ (заглушка, будет заполнен в Части 2) -->
+        <!-- ЭКРАН ВОПРОСОВ -->
         <div id="diagQuestions" class="diag-screen" style="display:none">
-          <div class="diag-coming-soon">
-            <div class="diag-spinner"></div>
-            <p>Анкета загружается…</p>
-            <p class="diag-coming-note">Полная версия анкеты появится в ближайшее время</p>
-            <a href="https://t.me/spokoinoe_dyhanie" target="_blank" rel="noopener noreferrer" class="diag-btn-primary" style="margin-top:1.5rem;display:inline-block">
-              👉 Пройти диагностику в Telegram
+          <div class="diag-question-wrap">
+            <p class="diag-q-text" id="diagQText"></p>
+            <p class="diag-q-sub" id="diagQSub"></p>
+            <div class="diag-options" id="diagOptions"></div>
+            <div class="diag-multi-hint" id="diagMultiHint" style="display:none">
+              <span id="diagSelectedCount">Выбрано: 0</span>
+            </div>
+            <div class="diag-nav">
+              <button class="diag-btn-ghost" id="diagBackBtn" style="display:none">← Назад</button>
+              <button class="diag-btn-primary diag-btn-next" id="diagNextBtn" style="display:none">Далее →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ЭКРАН РЕЗУЛЬТАТА -->
+        <div id="diagResult" class="diag-screen" style="display:none">
+          <div class="diag-result-icon">🎉</div>
+          <h3 class="diag-result-title">Диагностика завершена!</h3>
+          <p class="diag-result-text">Спасибо за честные ответы. Мы подготовили персональный анализ вашего дыхания.</p>
+          <div class="diag-result-cta">
+            <p class="diag-result-cta-label">Получите полный результат и персональные рекомендации прямо сейчас:</p>
+            <a href="https://t.me/spokoinoe_dyhanie?start=website_test" target="_blank" rel="noopener noreferrer" class="diag-btn-primary diag-btn-tg">
+              📲 Получить результат в Telegram
             </a>
+            <p class="diag-result-note">Бесплатно · Результат за 2 минуты</p>
           </div>
         </div>
 
@@ -75,52 +94,205 @@
   </div>
   `;
 
-  // --- Вставляем в DOM ---
   document.body.insertAdjacentHTML('beforeend', modalHTML);
 
   // --- Элементы ---
-  const modal       = document.getElementById('diagnosisModal');
-  const closeBtn    = document.getElementById('diagCloseBtn');
-  const startBtn    = document.getElementById('diagStartBtn');
-  const diagStart   = document.getElementById('diagStart');
-  const diagQs      = document.getElementById('diagQuestions');
-  const progressWrap= document.getElementById('diagProgressWrap');
+  var modal        = document.getElementById('diagnosisModal');
+  var closeBtn     = document.getElementById('diagCloseBtn');
+  var startBtn     = document.getElementById('diagStartBtn');
+  var diagStart    = document.getElementById('diagStart');
+  var diagQs       = document.getElementById('diagQuestions');
+  var diagResult   = document.getElementById('diagResult');
+  var progressWrap = document.getElementById('diagProgressWrap');
+  var progressFill = document.getElementById('diagProgressFill');
+  var progressLbl  = document.getElementById('diagProgressLabel');
+  var qText        = document.getElementById('diagQText');
+  var qSub         = document.getElementById('diagQSub');
+  var optionsWrap  = document.getElementById('diagOptions');
+  var multiHint    = document.getElementById('diagMultiHint');
+  var selectedCnt  = document.getElementById('diagSelectedCount');
+  var backBtn      = document.getElementById('diagBackBtn');
+  var nextBtn      = document.getElementById('diagNextBtn');
 
-  // --- Открыть модалку ---
+  // --- Движок (из survey-questions.js) ---
+  var engine = null;
+  var currentId = null;
+  var multiSelections = []; // для multiple-вопросов
+
+  // --- Утилиты ---
+  function showScreen(el) {
+    [diagStart, diagQs, diagResult].forEach(function(s) {
+      s.style.display = 'none';
+      s.classList.remove('diag-screen--active');
+    });
+    el.style.display = 'block';
+    el.classList.add('diag-screen--active');
+  }
+
+  function updateProgress(id) {
+    if (!engine) return;
+    var p = engine.getProgress(id);
+    progressFill.style.width = p.pct + '%';
+    progressLbl.textContent = 'Шаг ' + p.current + ' из ' + p.total;
+  }
+
+  // --- Рендер вопроса ---
+  function renderQuestion(id) {
+    if (!id) { finishSurvey(); return; }
+    currentId = id;
+    var q = engine.getQuestion(id);
+    if (!q) { finishSurvey(); return; }
+
+    // Текст
+    qText.textContent = q.text;
+    qSub.textContent  = q.sub || '';
+    qSub.style.display = q.sub ? 'block' : 'none';
+
+    // Прогресс
+    updateProgress(id);
+
+    // Кнопка назад
+    backBtn.style.display = (q.allowBack && engine.history.length >= 1) ? 'inline-flex' : 'none';
+    nextBtn.style.display = 'none';
+
+    // Очищаем варианты
+    optionsWrap.innerHTML = '';
+    multiSelections = [];
+    multiHint.style.display = 'none';
+    selectedCnt.textContent = 'Выбрано: 0';
+
+    if (q.type === 'scale') {
+      renderScale(q);
+    } else if (q.type === 'multiple') {
+      renderMultiple(q);
+    } else {
+      renderSingle(q);
+    }
+
+    // Анимация появления
+    optionsWrap.style.opacity = '0';
+    setTimeout(function() {
+      optionsWrap.style.transition = 'opacity 0.25s ease';
+      optionsWrap.style.opacity = '1';
+    }, 20);
+  }
+
+  function renderSingle(q) {
+    q.options.forEach(function(opt) {
+      var btn = document.createElement('button');
+      btn.className = 'diag-option';
+      btn.textContent = opt.label;
+      btn.addEventListener('click', function() {
+        engine.saveAnswer(q.id, opt.value);
+        var next = engine.getNext(q.id);
+        renderQuestion(next);
+      });
+      optionsWrap.appendChild(btn);
+    });
+  }
+
+  function renderMultiple(q) {
+    multiHint.style.display = 'flex';
+    q.options.forEach(function(opt) {
+      var btn = document.createElement('button');
+      btn.className = 'diag-option diag-option--multi';
+      btn.textContent = opt.label;
+      btn.dataset.value = opt.value;
+      btn.addEventListener('click', function() {
+        var idx = multiSelections.indexOf(opt.value);
+        if (idx > -1) {
+          multiSelections.splice(idx, 1);
+          btn.classList.remove('diag-option--selected');
+        } else {
+          if (q.maxSelections && multiSelections.length >= q.maxSelections) return;
+          multiSelections.push(opt.value);
+          btn.classList.add('diag-option--selected');
+        }
+        selectedCnt.textContent = 'Выбрано: ' + multiSelections.length +
+          (q.maxSelections ? ' (макс. ' + q.maxSelections + ')' : '');
+        nextBtn.style.display = multiSelections.length >= (q.minSelections || 1) ? 'inline-flex' : 'none';
+      });
+      optionsWrap.appendChild(btn);
+    });
+
+    nextBtn.style.display = 'none';
+    nextBtn.onclick = function() {
+      if (multiSelections.length < (q.minSelections || 1)) return;
+      engine.saveAnswer(q.id, multiSelections.slice());
+      renderQuestion(engine.getNext(q.id));
+    };
+  }
+
+  function renderScale(q) {
+    var wrap = document.createElement('div');
+    wrap.className = 'diag-scale';
+    for (var i = q.min; i <= q.max; i++) {
+      (function(val) {
+        var btn = document.createElement('button');
+        btn.className = 'diag-scale-btn';
+        btn.textContent = val;
+        btn.addEventListener('click', function() {
+          engine.saveAnswer(q.id, val);
+          renderQuestion(engine.getNext(q.id));
+        });
+        wrap.appendChild(btn);
+      })(i);
+    }
+    optionsWrap.appendChild(wrap);
+  }
+
+  // --- Завершение ---
+  function finishSurvey() {
+    progressWrap.style.display = 'none';
+    showScreen(diagResult);
+  }
+
+  // --- Открыть / закрыть ---
   function openDiag() {
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    // Сброс на стартовый экран
-    diagStart.classList.add('diag-screen--active');
-    diagQs.style.display = 'none';
+    // Сброс
+    showScreen(diagStart);
     progressWrap.style.display = 'none';
   }
 
-  // --- Закрыть модалку ---
   function closeDiag() {
     modal.style.display = 'none';
     document.body.style.overflow = '';
   }
 
   // --- Старт анкеты ---
-  startBtn.addEventListener('click', () => {
-    diagStart.classList.remove('diag-screen--active');
-    diagStart.style.display = 'none';
+  startBtn.addEventListener('click', function() {
+    if (typeof SurveyEngine === 'undefined') {
+      alert('Ошибка загрузки анкеты. Пожалуйста, обновите страницу.');
+      return;
+    }
+    engine = new SurveyEngine();
+    var firstId = engine.start();
     progressWrap.style.display = 'flex';
-    diagQs.style.display = 'block';
+    showScreen(diagQs);
+    renderQuestion(firstId);
+  });
+
+  // --- Кнопка Назад ---
+  backBtn.addEventListener('click', function() {
+    var prev = engine.goBack();
+    if (prev) renderQuestion(prev);
   });
 
   // --- Закрытие ---
   closeBtn.addEventListener('click', closeDiag);
-  modal.addEventListener('click', (e) => { if (e.target === modal) closeDiag(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.style.display === 'flex') closeDiag(); });
+  modal.addEventListener('click', function(e) { if (e.target === modal) closeDiag(); });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.style.display === 'flex') closeDiag();
+  });
 
-  // --- Вешаем на кнопку(-ки) с data-open-diag ---
-  document.addEventListener('click', (e) => {
+  // --- Открывать по data-open-diag ---
+  document.addEventListener('click', function(e) {
     if (e.target.closest('[data-open-diag]')) openDiag();
   });
 
-  // Экспорт для будущих частей
+  // Экспорт
   window.DiagnosisModal = { open: openDiag, close: closeDiag };
 
 })();
