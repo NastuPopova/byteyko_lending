@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CheckCircle, Clock, Sparkles, TrendingUp, ChevronLeft, ChevronRight, X, ArrowLeft } from 'lucide-react';
-import { QUESTIONS, getFlow, getNextQuestionId, getPrevQuestionId, getTotalQuestions } from '../data/surveyQuestions';
+import { QUESTIONS, getFlow, getNextQuestionId, getPrevQuestionId, getTotalQuestions, calculateResult } from '../data/surveyQuestions';
 
 const features = [
   { icon: <Sparkles className="h-6 w-6" />, title: 'Адаптивные вопросы', description: 'Следующий вопрос формируется на основе ваших ответов' },
@@ -9,13 +9,22 @@ const features = [
   { icon: <Clock className="h-6 w-6" />, title: 'Всего 2–3 минуты', description: 'Быстрое прохождение без регистрации и лишних данных' },
 ];
 
-// ---- Движок анкеты ----
+// ──── Строка результата ──────────────────────────────────────────────────
+const levelColors = {
+  good:     { bg: 'from-emerald-50 to-teal-50', badge: 'bg-emerald-100 text-emerald-700', bar: 'bg-emerald-400', border: 'border-emerald-200' },
+  mild:     { bg: 'from-yellow-50 to-orange-50', badge: 'bg-yellow-100 text-yellow-700', bar: 'bg-yellow-400', border: 'border-yellow-200' },
+  moderate: { bg: 'from-orange-50 to-red-50',    badge: 'bg-orange-100 text-orange-700', bar: 'bg-orange-400', border: 'border-orange-200' },
+  severe:   { bg: 'from-red-50 to-rose-50',      badge: 'bg-red-100 text-red-700',      bar: 'bg-red-400',    border: 'border-red-200' },
+};
+
+// ──── Движок анкеты ───────────────────────────────────────────────────────────
 const SurveyEngine = ({ onClose }) => {
   const [screen, setScreen] = useState('start'); // 'start' | 'survey' | 'done'
   const [userData, setUserData] = useState({});
   const [currentId, setCurrentId] = useState('age_group');
   const [multiSelected, setMultiSelected] = useState([]);
   const [animating, setAnimating] = useState(false);
+  const [result, setResult] = useState(null);
 
   const flow = getFlow(userData);
   const total = getTotalQuestions(userData);
@@ -37,6 +46,7 @@ const SurveyEngine = ({ onClose }) => {
       if (next) {
         setCurrentId(next);
       } else {
+        setResult(calculateResult(updated));
         setScreen('done');
       }
       setAnimating(false);
@@ -57,10 +67,7 @@ const SurveyEngine = ({ onClose }) => {
     }
   };
 
-  const handleSingle = (value) => {
-    goNext({ [currentId]: value });
-  };
-
+  const handleSingle = (value) => { goNext({ [currentId]: value }); };
   const handleMultiToggle = (value) => {
     setMultiSelected((prev) => {
       if (prev.includes(value)) return prev.filter((v) => v !== value);
@@ -68,35 +75,30 @@ const SurveyEngine = ({ onClose }) => {
       return [...prev, value];
     });
   };
-
   const handleMultiDone = () => {
     if (multiSelected.length < (question.minSelections || 1)) return;
     goNext({ [currentId]: multiSelected });
   };
+  const handleScale = (value) => { goNext({ [currentId]: value }); };
 
-  const handleScale = (value) => {
-    goNext({ [currentId]: value });
-  };
-
-  // Стартовый экран
+  // ──── Стартовый экран ──────────────────────────────────────────────────
   if (screen === 'start') {
     return (
       <ModalShell onClose={onClose} progress={0}>
-        <div className="text-center px-2">
-          <div className="text-5xl mb-4">🌬️</div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">Узнайте состояние вашего дыхания</h3>
-          <p className="text-gray-600 mb-6 leading-relaxed text-base">
-            Анкета содержит адаптивные вопросы — следующий вопрос зависит от вашего ответа.
-            В конце вы получите персональный результат.
+        <div className="text-center px-1">
+          <div className="text-5xl mb-3">🌬️</div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Узнайте состояние вашего дыхания</h3>
+          <p className="text-gray-600 mb-4 leading-relaxed text-sm">
+            Анкета содержит адаптивные вопросы. В конце — персональный результат с рекомендациями.
           </p>
-          <ul className="text-left space-y-2 mb-8">
+          <ul className="text-left space-y-2 mb-6">
             {['✅ Без регистрации', '✅ Результат сразу', '✅ Персональные рекомендации'].map((item, i) => (
-              <li key={i} className="flex items-center gap-2 text-gray-700 text-base">{item}</li>
+              <li key={i} className="flex items-center gap-2 text-gray-700 text-sm">{item}</li>
             ))}
           </ul>
           <button
-            onClick={() => { setScreen('survey'); setCurrentId('age_group'); setUserData({}); setMultiSelected([]); }}
-            className="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-4 rounded-xl text-lg hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+            onClick={() => { setScreen('survey'); setCurrentId('age_group'); setUserData({}); setMultiSelected([]); setResult(null); }}
+            className="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-3 rounded-xl text-base hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
           >
             Начать диагностику →
           </button>
@@ -105,53 +107,102 @@ const SurveyEngine = ({ onClose }) => {
     );
   }
 
-  // Экран результата
-  if (screen === 'done') {
+  // ──── Экран результата ─────────────────────────────────────────────
+  if (screen === 'done' && result) {
+    const colors = levelColors[result.level] || levelColors.mild;
+    const hasScore = typeof result.score === 'number';
+
     return (
       <ModalShell onClose={onClose} progress={100}>
-        <div className="text-center py-4">
-          <div className="text-5xl mb-4">🎉</div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">Анкета завершена!</h3>
-          <p className="text-gray-600 mb-6 leading-relaxed text-base">
-            Персональный результат будет готов в ближайшее время.
-            Сейчас вы можете записаться на пробное занятие.
-          </p>
-          <a
-            href="https://t.me/spokoinoe_dyhanie"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-4 rounded-xl text-lg hover:shadow-lg transition-all duration-300 mb-3"
-          >
-            📲 Записаться на пробное — 1 500 ₽ →
-          </a>
-          <button
-            onClick={onClose}
-            className="text-gray-400 text-sm hover:text-gray-600 transition-colors"
-          >
-            Закрыть
-          </button>
+        <div className={`rounded-xl bg-gradient-to-br ${colors.bg} p-4 mb-4 ${colors.border} border`}>
+          {/* Заголовок */}
+          <div className="flex items-start gap-3 mb-3">
+            <span className="text-3xl flex-shrink-0">{result.emoji}</span>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 leading-tight">{result.title}</h3>
+              <p className="text-sm font-medium text-gray-600">{result.subtitle}</p>
+            </div>
+          </div>
+
+          {/* Индекс-бар (не для детского потока) */}
+          {hasScore && (
+            <div className="mb-3">
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Индекс нарушения дыхания</span>
+                <span className="font-bold text-gray-700">{result.score}/100</span>
+              </div>
+              <div className="w-full bg-white/70 rounded-full h-2.5">
+                <div
+                  className={`${colors.bar} rounded-full h-2.5 transition-all duration-700`}
+                  style={{ width: `${result.score}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Описание */}
+          <p className="text-sm text-gray-700 leading-relaxed">{result.description}</p>
         </div>
+
+        {/* Техника (только взрослые) */}
+        {result.technique && (
+          <div className="bg-teal-50 border border-teal-200 rounded-xl p-3 mb-4">
+            <p className="text-xs font-semibold text-teal-600 uppercase tracking-wide mb-1">🎯 Рекомендуемая техника</p>
+            <p className="text-sm font-bold text-gray-900">{result.technique.name}</p>
+            <p className="text-xs text-gray-600 mt-0.5">{result.technique.desc}</p>
+          </div>
+        )}
+
+        {/* Советы */}
+        {result.recommendations && result.recommendations.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">📝 Что делать дальше</p>
+            <ul className="space-y-1.5">
+              {result.recommendations.map((tip, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                  <span className="mt-0.5 flex-shrink-0">•</span>
+                  <span>{tip}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* CTA */}
+        <a
+          href="https://t.me/spokoinoe_dyhanie"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-2 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3 rounded-xl text-base hover:shadow-lg transition-all duration-300 mb-2"
+        >
+          📲 {result.cta || 'Записаться на пробное'} — 1 500 ₽ →
+        </a>
+        <button
+          onClick={onClose}
+          className="w-full text-gray-400 text-sm hover:text-gray-600 transition-colors py-1"
+        >
+          Закрыть
+        </button>
       </ModalShell>
     );
   }
 
-  // Экран вопроса
+  // ──── Экран вопроса ─────────────────────────────────────────────────
   return (
     <ModalShell onClose={onClose} progress={progress} onBack={question?.allowBack ? goBack : null}>
       <div className={`transition-opacity duration-200 ${animating ? 'opacity-0' : 'opacity-100'}`}>
-        {/* Текст вопроса */}
-        <p className="text-gray-900 font-semibold text-lg mb-5 leading-relaxed whitespace-pre-line">
+        <p className="text-gray-900 font-semibold text-base mb-4 leading-relaxed whitespace-pre-line">
           {question?.text}
         </p>
 
         {/* Одиночный выбор */}
         {question?.type === 'single_choice' && (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             {question.options.map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => handleSingle(opt.value)}
-                className="w-full text-left px-5 py-4 rounded-xl border-2 border-gray-200 hover:border-teal-400 hover:bg-teal-50 transition-all duration-150 text-gray-800 font-medium text-base active:scale-[0.98]"
+                className="w-full text-left px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-teal-400 hover:bg-teal-50 transition-all duration-150 text-gray-800 font-medium text-sm active:scale-[0.98]"
               >
                 {opt.label}
               </button>
@@ -161,12 +212,12 @@ const SurveyEngine = ({ onClose }) => {
 
         {/* Шкала */}
         {question?.type === 'scale' && (
-          <div className="flex flex-wrap gap-3 justify-center">
+          <div className="flex flex-wrap gap-2 justify-center">
             {question.options.map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => handleScale(opt.value)}
-                className="w-14 h-14 rounded-full border-2 border-gray-200 hover:border-teal-400 hover:bg-teal-100 font-bold text-gray-700 text-base transition-all duration-150 active:scale-95"
+                className="w-12 h-12 rounded-full border-2 border-gray-200 hover:border-teal-400 hover:bg-teal-100 font-bold text-gray-700 text-sm transition-all duration-150 active:scale-95"
               >
                 {opt.label}
               </button>
@@ -176,15 +227,15 @@ const SurveyEngine = ({ onClose }) => {
 
         {/* Множественный выбор */}
         {question?.type === 'multiple_choice' && (
-          <div className="flex flex-col gap-3">
-            <p className="text-sm text-gray-500 mb-1">Макс. {question.maxSelections} варианта</p>
+          <div className="flex flex-col gap-2">
+            <p className="text-xs text-gray-500 mb-1">Макс. {question.maxSelections} варианта</p>
             {question.options.map((opt) => {
               const selected = multiSelected.includes(opt.value);
               return (
                 <button
                   key={opt.value}
                   onClick={() => handleMultiToggle(opt.value)}
-                  className={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all duration-150 text-base font-medium active:scale-[0.98] ${
+                  className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all duration-150 text-sm font-medium active:scale-[0.98] ${
                     selected
                       ? 'border-teal-500 bg-teal-50 text-teal-800'
                       : 'border-gray-200 hover:border-teal-300 hover:bg-teal-50 text-gray-800'
@@ -198,7 +249,7 @@ const SurveyEngine = ({ onClose }) => {
             <button
               onClick={handleMultiDone}
               disabled={multiSelected.length < (question.minSelections || 1)}
-              className="mt-2 w-full bg-teal-500 disabled:bg-gray-300 text-white font-bold py-4 rounded-xl text-lg transition-all duration-150 hover:bg-teal-600 active:scale-[0.98]"
+              className="mt-2 w-full bg-teal-500 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl text-base transition-all duration-150 hover:bg-teal-600 active:scale-[0.98]"
             >
               Готово →
             </button>
@@ -209,26 +260,40 @@ const SurveyEngine = ({ onClose }) => {
   );
 };
 
-// ---- Оболочка модального окна ----
+// ──── Оболочка модального окна (mobile-first) ──────────────────────
 const ModalShell = ({ children, onClose, progress, onBack }) => (
   <div
-    className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
     style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
     onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
   >
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative overflow-hidden max-h-[90vh] flex flex-col">
+    <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl relative overflow-hidden flex flex-col"
+      style={{ maxHeight: '92dvh' }}
+    >
       {/* Шапка */}
-      <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-5 py-4 text-white flex-shrink-0">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-4 py-3 text-white flex-shrink-0">
+        {/* Драг-хандл на мобайле */}
+        <div className="flex justify-center mb-2 sm:hidden">
+          <div className="w-10 h-1 bg-white/40 rounded-full" />
+        </div>
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             {onBack && (
-              <button onClick={onBack} className="w-7 h-7 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors" aria-label="Назад">
+              <button
+                onClick={onBack}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                aria-label="Назад"
+              >
                 <ArrowLeft className="h-4 w-4" />
               </button>
             )}
-            <span className="font-bold text-base">🫁 Диагностика дыхания</span>
+            <span className="font-bold text-sm">🫁 Диагностика дыхания</span>
           </div>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors" aria-label="Закрыть">
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+            aria-label="Закрыть"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -242,12 +307,12 @@ const ModalShell = ({ children, onClose, progress, onBack }) => (
         <p className="text-teal-100 text-xs mt-1">{progress}% завершено</p>
       </div>
       {/* Тело скроллится */}
-      <div className="px-5 py-6 overflow-y-auto">{children}</div>
+      <div className="px-4 py-5 overflow-y-auto flex-1">{children}</div>
     </div>
   </div>
 );
 
-// ---- Главный компонент ----
+// ──── Главный компонент ──────────────────────────────────────────────────────
 const BreathingTest = () => {
   const [currentScreen, setCurrentScreen] = useState(0);
   const [showSurvey, setShowSurvey] = useState(false);
