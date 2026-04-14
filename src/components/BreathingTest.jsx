@@ -326,7 +326,7 @@ const SurveyEngine = ({ onClose }) => {
 
 // ──── Оболочка модалки (mobile-first) ────────────────────────────────────────
 const ModalShell = ({ children, onClose, progress, onBack }) => (
-  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+  <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
     style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
     onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
     <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl relative overflow-hidden flex flex-col"
@@ -363,9 +363,13 @@ const ModalShell = ({ children, onClose, progress, onBack }) => (
 );
 
 // ──── Основная секция ─────────────────────────────────────────────────────────
-const BreathingTest = () => {
+// surveyOpen и onSurveyToggle приходят из App.jsx для синхронизации
+// скрытия floating-элементов (StickyCTA, ScrollToTop, PopupNotifications)
+const BreathingTest = ({ surveyOpen, onSurveyToggle }) => {
   const [currentScreen, setCurrentScreen] = useState(0);
-  const [showSurvey, setShowSurvey]       = useState(false);
+
+  const openSurvey  = () => onSurveyToggle(true);
+  const closeSurvey = () => onSurveyToggle(false);
 
   const screens = [
     { image: '/images/bot-screen-1.jpg', alt: 'Интерфейс теста - экран 1' },
@@ -380,7 +384,7 @@ const BreathingTest = () => {
 
   return (
     <>
-      {showSurvey && <SurveyEngine onClose={() => setShowSurvey(false)} />}
+      {surveyOpen && <SurveyEngine onClose={closeSurvey} />}
 
       <section id="breathing-test" className="py-20 bg-gradient-to-br from-orange-100 via-white to-teal-100 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-orange-200 rounded-full opacity-10 blur-3xl" />
@@ -412,7 +416,7 @@ const BreathingTest = () => {
                   <span>Пройти диагностику в Telegram</span>
                   <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                 </button>
-                <button onClick={() => setShowSurvey(true)}
+                <button onClick={openSurvey}
                   className="group bg-white border-2 border-teal-500 text-teal-600 font-bold py-4 px-8 rounded-full text-lg shadow-md hover:shadow-xl hover:bg-teal-50 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2">
                   <span>🫁 Пройти анкету на сайте</span>
                 </button>
