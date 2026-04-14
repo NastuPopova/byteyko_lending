@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle, Clock, Sparkles, TrendingUp, ChevronLeft, ChevronRight, X, ArrowLeft, User, Mail, Phone } from 'lucide-react';
 import { QUESTIONS, getNextQuestionId, getPrevQuestionId, getTotalQuestions, getQuestionIndex, calculateResult } from '../data/surveyQuestions';
 import { sendLeadToTelegram } from '../utils/telegramNotify';
@@ -325,42 +325,61 @@ const SurveyEngine = ({ onClose }) => {
 };
 
 // ──── Оболочка модалки (mobile-first) ────────────────────────────────────────
-const ModalShell = ({ children, onClose, progress, onBack }) => (
-  <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
-    style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-    onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl relative overflow-hidden flex flex-col"
-      style={{ maxHeight: '92dvh' }}>
-      <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-4 py-3 text-white flex-shrink-0">
-        <div className="flex justify-center mb-2 sm:hidden">
-          <div className="w-10 h-1 bg-white/40 rounded-full" />
-        </div>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            {onBack && (
-              <button onClick={onBack}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-                aria-label="Назад">
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-            )}
-            <span className="font-bold text-sm">🫁 Диагностика дыхания</span>
+const ModalShell = ({ children, onClose, progress, onBack }) => {
+  // Блокируем скролл страницы пока модалка открыта
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    document.body.style.overflowY = 'scroll';
+
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflowY = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
+      style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl relative overflow-hidden flex flex-col"
+        style={{ maxHeight: '92dvh' }}>
+        <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-4 py-3 text-white flex-shrink-0">
+          <div className="flex justify-center mb-2 sm:hidden">
+            <div className="w-10 h-1 bg-white/40 rounded-full" />
           </div>
-          <button onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-            aria-label="Закрыть">
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              {onBack && (
+                <button onClick={onBack}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                  aria-label="Назад">
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+              )}
+              <span className="font-bold text-sm">🫁 Диагностика дыхания</span>
+            </div>
+            <button onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+              aria-label="Закрыть">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="w-full bg-white/30 rounded-full h-1.5">
+            <div className="bg-white rounded-full h-1.5 transition-all duration-500" style={{ width: `${progress}%` }} />
+          </div>
+          <p className="text-teal-100 text-xs mt-1">{progress}% завершено</p>
         </div>
-        <div className="w-full bg-white/30 rounded-full h-1.5">
-          <div className="bg-white rounded-full h-1.5 transition-all duration-500" style={{ width: `${progress}%` }} />
-        </div>
-        <p className="text-teal-100 text-xs mt-1">{progress}% завершено</p>
+        <div className="px-4 py-5 overflow-y-auto flex-1">{children}</div>
       </div>
-      <div className="px-4 py-5 overflow-y-auto flex-1">{children}</div>
     </div>
-  </div>
-);
+  );
+};
 
 // ──── Основная секция ─────────────────────────────────────────────────────────
 // surveyOpen и onSurveyToggle приходят из App.jsx для синхронизации
