@@ -9,7 +9,7 @@ const features = [
   { icon: <Clock className="h-6 w-6" />, title: 'Всего 2–3 минуты', description: 'Быстрое прохождение без регистрации и лишних данных' },
 ];
 
-// ──── Строка результата ──────────────────────────────────────────────────
+// ──── Цвета по уровню ────────────────────────────────────────────────────────
 const levelColors = {
   good:     { bg: 'from-emerald-50 to-teal-50', badge: 'bg-emerald-100 text-emerald-700', bar: 'bg-emerald-400', border: 'border-emerald-200' },
   mild:     { bg: 'from-yellow-50 to-orange-50', badge: 'bg-yellow-100 text-yellow-700', bar: 'bg-yellow-400', border: 'border-yellow-200' },
@@ -107,15 +107,15 @@ const SurveyEngine = ({ onClose }) => {
     );
   }
 
-  // ──── Экран результата ─────────────────────────────────────────────
+  // ──── Экран результата ─────────────────────────────────────────────────────
   if (screen === 'done' && result) {
     const colors = levelColors[result.level] || levelColors.mild;
     const hasScore = typeof result.score === 'number';
 
     return (
       <ModalShell onClose={onClose} progress={100}>
+        {/* Блок результата */}
         <div className={`rounded-xl bg-gradient-to-br ${colors.bg} p-4 mb-4 ${colors.border} border`}>
-          {/* Заголовок */}
           <div className="flex items-start gap-3 mb-3">
             <span className="text-3xl flex-shrink-0">{result.emoji}</span>
             <div>
@@ -124,7 +124,6 @@ const SurveyEngine = ({ onClose }) => {
             </div>
           </div>
 
-          {/* Индекс-бар (не для детского потока) */}
           {hasScore && (
             <div className="mb-3">
               <div className="flex justify-between text-xs text-gray-500 mb-1">
@@ -140,18 +139,8 @@ const SurveyEngine = ({ onClose }) => {
             </div>
           )}
 
-          {/* Описание */}
           <p className="text-sm text-gray-700 leading-relaxed">{result.description}</p>
         </div>
-
-        {/* Техника (только взрослые) */}
-        {result.technique && (
-          <div className="bg-teal-50 border border-teal-200 rounded-xl p-3 mb-4">
-            <p className="text-xs font-semibold text-teal-600 uppercase tracking-wide mb-1">🎯 Рекомендуемая техника</p>
-            <p className="text-sm font-bold text-gray-900">{result.technique.name}</p>
-            <p className="text-xs text-gray-600 mt-0.5">{result.technique.desc}</p>
-          </div>
-        )}
 
         {/* Советы */}
         {result.recommendations && result.recommendations.length > 0 && (
@@ -168,14 +157,28 @@ const SurveyEngine = ({ onClose }) => {
           </div>
         )}
 
-        {/* CTA */}
+        {/* Статичный оффер пробного занятия */}
+        <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-4 mb-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">АП</div>
+            <div>
+              <p className="text-sm font-bold text-gray-900">Александр Попов</p>
+              <p className="text-xs text-gray-500">Методист по дыханию Бутейко · <span className="text-orange-600">@AS_Popov87</span></p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-700 leading-relaxed">
+            Запишитесь на <strong>пробное занятие</strong> — разберём ваш результат вместе и составим персональный план дыхательных практик.
+          </p>
+        </div>
+
+        {/* CTA — оплата через бот */}
         <a
-          href="https://t.me/spokoinoe_dyhanie"
+          href="https://t.me/breathing_opros_bot"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-2 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3 rounded-xl text-base hover:shadow-lg transition-all duration-300 mb-2"
+          className="inline-flex items-center justify-center gap-2 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3.5 rounded-xl text-base hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] mb-2"
         >
-          📲 {result.cta || 'Записаться на пробное'} — 1 500 ₽ →
+          📲 Записаться на пробное занятие — 1 500 ₽ →
         </a>
         <button
           onClick={onClose}
@@ -187,7 +190,7 @@ const SurveyEngine = ({ onClose }) => {
     );
   }
 
-  // ──── Экран вопроса ─────────────────────────────────────────────────
+  // ──── Экран вопроса ─────────────────────────────────────────────────────────
   return (
     <ModalShell onClose={onClose} progress={progress} onBack={question?.allowBack ? goBack : null}>
       <div className={`transition-opacity duration-200 ${animating ? 'opacity-0' : 'opacity-100'}`}>
@@ -260,7 +263,7 @@ const SurveyEngine = ({ onClose }) => {
   );
 };
 
-// ──── Оболочка модального окна (mobile-first) ──────────────────────
+// ──── Оболочка модального окна (mobile-first) ─────────────────────────────────
 const ModalShell = ({ children, onClose, progress, onBack }) => (
   <div
     className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
@@ -312,7 +315,7 @@ const ModalShell = ({ children, onClose, progress, onBack }) => (
   </div>
 );
 
-// ──── Главный компонент ──────────────────────────────────────────────────────
+// ──── Главный компонент ───────────────────────────────────────────────────────
 const BreathingTest = () => {
   const [currentScreen, setCurrentScreen] = useState(0);
   const [showSurvey, setShowSurvey] = useState(false);
