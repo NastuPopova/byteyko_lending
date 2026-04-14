@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 
-const StickyCTA = () => {
+const StickyCTA = ({ hidden = false }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       const header = document.querySelector('header');
       if (header) {
-        const headerRect = header.getBoundingClientRect();
-        const headerBottom = headerRect.bottom;
+        const headerBottom = header.getBoundingClientRect().bottom;
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         setIsVisible(headerBottom < 0 && scrollTop > 300);
       }
@@ -19,7 +18,6 @@ const StickyCTA = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Плавный скролл к секции диагностики
   const goToTestSection = () => {
     const section = document.querySelector('#breathing-test');
     if (section) section.scrollIntoView({ behavior: 'smooth' });
@@ -28,7 +26,7 @@ const StickyCTA = () => {
   return (
     <div
       className={`fixed bottom-5 left-5 md:left-8 z-50 transition-transform duration-300 ${
-        isVisible ? 'translate-y-0' : 'translate-y-[100px]'
+        isVisible && !hidden ? 'translate-y-0' : 'translate-y-[100px]'
       }`}
     >
       <button
