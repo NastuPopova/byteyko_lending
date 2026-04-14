@@ -400,276 +400,387 @@ export function getTotalQuestions(userData) {
   }).length;
 }
 
-// ─────────────────────────────────────────────
-// АЛГОРИТМ ПОДСЧЁТА РЕЗУЛЬТАТА
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// VERSE-АЛГОРИТМ — портирован из breathing-lead-bot / verse_analysis.js
+// Urgency (40%) × Readiness (35%) × Fit (25%) → сегмент + персональный результат
+// ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Вычисляет «индекс нарушения дыхания» (0–100).
- * Чем выше — тем серьёзнее проблема.
- * Затем на основе индекса + приоритетной проблемы
- * выдаётся персонализированный результат.
- */
-export function calculateResult(userData) {
-  // ── Детский поток ────────────────────────────────────────────────
-  if (userData.age_group === 'for_child') {
-    const childAge = userData.child_age_detail || '';
-    const problems = Array.isArray(userData.child_problems_detailed)
-      ? userData.child_problems_detailed
-      : [];
-    const isSmall = ['3-4', '5-6', '7-8'].includes(childAge);
+// Веса компонентов (как в боте)
+const SEGMENT_WEIGHTS = { urgency: 0.4, readiness: 0.35, fit: 0.25 };
+const CHILD_WEIGHTS   = { urgency: 0.5, readiness: 0.3,  fit: 0.2  };
 
-    const hasSleep = problems.includes('sleep_problems') || problems.includes('nightmares');
-    const hasBreathing = problems.includes('breathing_issues');
-    const hasAnxiety = problems.includes('anxiety') || problems.includes('tantrums');
-    const isPreventive = problems.includes('prevention');
+// ── Взрослый: срочность (0–100) ──────────────────────────────────────────────
+function calcUrgency(d) {
+  let s = 0;
 
-    if (isPreventive) {
-      return {
-        level: 'good',
-        emoji: '🌱',
-        title: 'Отличная профилактика!',
-        subtitle: 'Дыхание ребёнка в норме',
-        description: 'Ребёнок в хорошей форме. Дыхательные практики в виде игры помогут укрепить нервную систему, улучшить концентрацию и иммунитет.',
-        recommendations: [
-          isSmall ? '🎮 «Дышим как животные» — игровые упражнения 5 мин/день' : '🧘 Утреннее дыхание носом — 3–5 минут перед школой',
-          '🌬️ Носовое дыхание во время прогулок и игр',
-          '💤 Дыхательная медитация перед сном — легко засыпать',
-        ],
-        cta: 'Получить детскую программу',
-      };
-    }
+  // Стресс × 4 (0–40)
+  s += (Number(d.stress_level) || 0) * 4;
 
-    const mainIssue = hasBreathing
-      ? 'дыхание'
-      : hasSleep
-      ? 'сон и расслабление'
-      : hasAnxiety
-      ? 'тревожность и эмоции'
-      : 'общее состояние';
+  // Критические проблемы +15 каждая
+  const criticalProblems = ['chronic_stress', 'anxiety', 'insomnia', 'high_pressure', 'breathing_issues'];
+  (d.current_problems || []).forEach(p => { if (criticalProblems.includes(p)) s += 15; });
 
+  // Хронические заболевания
+  const criticalConditions = ['respiratory_diseases', 'cardiovascular_diseases', 'panic_disorder'];
+  (d.chronic_conditions || []).filter(c => c !== 'none').forEach(c => {
+    s += criticalConditions.includes(c) ? 15 : 8;
+  });
+
+  // Частота проблем с дыханием
+  s += { constantly: 20, often: 15, sometimes: 10, rarely: 5, never: 0 }[d.breathing_frequency] || 0;
+
+  // Поверхностное дыхание
+  s += { yes_often: 12, sometimes: 5, no: 0 }[d.shallow_breathing] || 0;
+
+  // Дыхание в стрессе
+  s += { rapid_shallow: 10, breath_holding: 8, air_shortage: 12, mouth_breathing: 10, no_change: 3, conscious_breathing: 0 }[d.stress_breathing] || 0;
+
+  // Профессиональный риск
+  s += { office_work: 10, home_work: 5, maternity_leave: 12, student: 8, physical_work: 5, management: 10, retired: 3 }[d.occupation] || 0;
+
+  // Возрастной множитель (как в боте)
+  const ageMult = { '18-30': 0.8, '31-45': 1.0, '46-60': 1.2, '60+': 1.3 }[d.age_group] || 1.0;
+  s *= ageMult;
+
+  return Math.min(Math.round(s), 100);
+}
+
+// ── Взрослый: готовность к практикам (0–100) ─────────────────────────────────
+function calcReadiness(d) {
+  let s = 20;
+
+  // Опыт практик
+  s += { never: 20, few_times: 25, theory_only: 18, sometimes: 15, regularly: 10, expert: 8 }[d.breathing_experience] || 15;
+
+  // Готовность уделять время
+  s += { '3-5_minutes': 30, '10-15_minutes': 25, '20-30_minutes': 15, '30+_minutes': 10 }[d.time_commitment] || 20;
+
+  // Конкретность целей (до 25 баллов)
+  const specificGoals = ['reduce_stress', 'improve_sleep', 'reduce_anxiety', 'normalize_pressure', 'increase_energy',
+    'quick_relaxation', 'stress_resistance', 'improve_breathing', 'improve_focus'];
+  const goalCount = (d.main_goals || []).filter(g => specificGoals.includes(g)).length;
+  s += Math.min(goalCount * 12, 25);
+
+  // Осознанность дыхания
+  if (d.breathing_method === 'mouth') s += 8;
+  if (d.shallow_breathing === 'yes_often') s += 10;
+  else if (d.shallow_breathing === 'sometimes') s += 5;
+
+  // Качество сна (плохой сон → сильная мотивация)
+  const sleepQ = Number(d.sleep_quality) || 5;
+  if (sleepQ <= 3) s += 10;
+  else if (sleepQ <= 5) s += 5;
+
+  return Math.min(s, 100);
+}
+
+// ── Взрослый: соответствие программе (0–100) ─────────────────────────────────
+function calcFit(d) {
+  let s = 30;
+
+  // Проблемы, которые хорошо решаются дыханием по Бутейко
+  const strengths = ['chronic_stress', 'anxiety', 'insomnia', 'high_pressure', 'fatigue', 'concentration_issues', 'breathing_issues'];
+  (d.current_problems || []).forEach(p => { if (strengths.includes(p)) s += 10; });
+
+  // Цели в нашей зоне силы
+  const strengthGoals = ['reduce_stress', 'improve_sleep', 'reduce_anxiety', 'normalize_pressure', 'increase_energy',
+    'quick_relaxation', 'stress_resistance', 'improve_breathing', 'improve_focus'];
+  (d.main_goals || []).forEach(g => { if (strengthGoals.includes(g)) s += 8; });
+
+  // Профессиональная аудитория
+  s += { office_work: 15, home_work: 12, maternity_leave: 15, student: 10, physical_work: 5, management: 12, retired: 8 }[d.occupation] || 5;
+
+  // Возраст (sweet spot 31–45)
+  s += { '18-30': 5, '31-45': 15, '46-60': 12, '60+': 8 }[d.age_group] || 8;
+
+  return Math.min(s, 100);
+}
+
+// ── Определение сегмента ──────────────────────────────────────────────────────
+function determineSegment(total) {
+  if (total >= 80) return 'HOT_LEAD';
+  if (total >= 60) return 'WARM_LEAD';
+  if (total >= 40) return 'COLD_LEAD';
+  return 'NURTURE_LEAD';
+}
+
+// ── Основная проблема ─────────────────────────────────────────────────────────
+function identifyPrimaryIssue(d) {
+  const priority = {
+    panic_attacks: 100, chronic_stress: 90, anxiety: 85, insomnia: 80,
+    high_pressure: 75, breathing_issues: 70, fatigue: 60,
+    headaches: 50, concentration_issues: 45,
+  };
+  let top = d.priority_problem || 'chronic_stress';
+  let max = priority[top] || 0;
+  (d.current_problems || []).forEach(p => {
+    if ((priority[p] || 0) > max) { max = priority[p]; top = p; }
+  });
+  return top;
+}
+
+// ── Техника под проблему ──────────────────────────────────────────────────────
+const TECHNIQUE_MAP = {
+  chronic_stress:       { name: 'Box Breathing (4-4-4-4)', desc: 'вдох 4 сек → задержка 4 → выдох 4 → задержка 4. Техника Navy SEALs — снижает кортизол за 5 минут' },
+  insomnia:             { name: 'Дыхание 4-7-8', desc: 'вдох 4 сек → задержка 7 → выдох 8. Активирует парасимпатику, засыпание за 10–15 минут' },
+  breathing_issues:     { name: 'Метод Бутейко', desc: 'уменьшение объёма дыхания, восстановление нормы CO₂ — убирает одышку и нехватку воздуха' },
+  high_pressure:        { name: 'Резонансное дыхание 5-5', desc: 'вдох 5 сек + выдох 5 сек — снижает давление на 5–10 мм рт.ст. уже за один сеанс' },
+  anxiety:              { name: 'Физиологический вздох', desc: 'двойной вдох носом + долгий выдох ртом — снимает острую тревогу за 30–90 секунд' },
+  fatigue:              { name: 'Капалабхати (облегчённая)', desc: 'ритмичные короткие выдохи носом — активирует симпатику, даёт бодрость без кофеина' },
+  concentration_issues: { name: 'Нади Шодхана (попеременное)', desc: 'поочерёдное дыхание через каждую ноздрю — балансирует полушария, улучшает фокус' },
+  headaches:            { name: 'Дыхание через нос + удлинённый выдох', desc: 'вдох носом 4 сек → выдох 6–8 сек — снимает сосудистое напряжение' },
+};
+
+// ── Профиль пользователя (название) ──────────────────────────────────────────
+function getProfileName(d) {
+  const profiles = {
+    office_work: 'Офисный работник в стрессе',
+    home_work: 'Фрилансер / работа из дома',
+    student: 'Учебный стресс и перегрузки',
+    maternity_leave: 'Материнское выгорание',
+    physical_work: 'Физический труд и усталость',
+    management: 'Руководящий стресс',
+    retired: 'Возрастные изменения дыхания',
+  };
+  return profiles[d.occupation] || 'Профилактика и оздоровление';
+}
+
+// ── Персонализированные советы ────────────────────────────────────────────────
+function buildRecommendations(primaryIssue, segment, d) {
+  const tips = [];
+  const goals = d.main_goals || [];
+  const problems = d.current_problems || [];
+  const experience = d.breathing_experience || 'never';
+  const isBeginnerFriendly = ['never', 'few_times', 'theory_only'].includes(experience);
+  const timeCommit = d.time_commitment || '10-15_minutes';
+  const timeLabel = { '3-5_minutes': '3–5 мин', '10-15_minutes': '10–15 мин', '20-30_minutes': '20–30 мин', '30+_minutes': '30+ мин' }[timeCommit] || '10–15 мин';
+
+  // Сегментные советы
+  if (segment === 'HOT_LEAD') {
+    tips.push('🚨 Начните прямо сегодня — даже 3 минуты практики перед сном уже дадут эффект');
+  } else if (segment === 'WARM_LEAD') {
+    tips.push('💪 У вас хорошая мотивация — регулярность важнее длительности, начните с ' + timeLabel + ' в день');
+  } else {
+    tips.push('🌱 Начните с малого: ' + timeLabel + ' утром формируют привычку за 21 день');
+  }
+
+  // По целям
+  if (goals.includes('improve_sleep') || primaryIssue === 'insomnia') {
+    tips.push('😴 Дыхание 4-7-8 за 20 минут до сна — засыпание ускоряется в 2–3 раза');
+  }
+  if (goals.includes('reduce_anxiety') || primaryIssue === 'anxiety') {
+    tips.push('😌 Физиологический вздох в момент тревоги — работает за 30 секунд');
+  }
+  if (goals.includes('increase_energy') || primaryIssue === 'fatigue') {
+    tips.push('⚡ Утренняя Капалабхати (2 мин) заменяет кофе и держит тонус до обеда');
+  }
+  if (goals.includes('normalize_pressure') || primaryIssue === 'high_pressure') {
+    tips.push('❤️ Резонансное дыхание 5+5 (10 мин/день) снижает давление без таблеток');
+  }
+  if (d.breathing_method === 'mouth') {
+    tips.push('👃 Ночное носовое дыхание (tape-метод) — безопасно, меняет паттерн за 2 недели');
+  }
+
+  // По хроническим заболеваниям — предостережения
+  const conditions = (d.chronic_conditions || []).filter(c => c !== 'none');
+  if (conditions.includes('respiratory_diseases')) {
+    tips.push('🫁 При астме держите ингалятор рядом — начинайте с мягких техник без форсирования');
+  }
+  if (conditions.includes('cardiovascular_diseases')) {
+    tips.push('💔 При гипертонии: никаких задержек дыхания более 4 сек, только плавные ритмы');
+  }
+  if (conditions.includes('panic_disorder')) {
+    tips.push('😰 При ВСД / паники: первые занятия по 3–5 минут, желательно с инструктором');
+  }
+
+  // Опытный практик — отдельный совет
+  if (!isBeginnerFriendly) {
+    tips.push('🎯 Ваш опыт позволяет сразу работать с продвинутыми техниками Бутейко');
+  }
+
+  // Возвращаем первые 3 уникальных совета
+  return [...new Set(tips)].slice(0, 3);
+}
+
+// ── CTA по сегменту ───────────────────────────────────────────────────────────
+function getCtaText(segment) {
+  return {
+    HOT_LEAD:    'Записаться на пробное занятие — 1 500 ₽',
+    WARM_LEAD:   'Получить персональный план — 1 500 ₽',
+    COLD_LEAD:   'Узнать подходящую программу',
+    NURTURE_LEAD:'Получить бесплатные материалы',
+  }[segment] || 'Записаться на пробное занятие';
+}
+
+// ── Описания уровней (urgency-скор → визуальный уровень для UI) ──────────────
+function urgencyToLevel(urgency) {
+  if (urgency >= 70) return 'severe';
+  if (urgency >= 45) return 'moderate';
+  if (urgency >= 25) return 'mild';
+  return 'good';
+}
+
+const LEVEL_DATA = {
+  good: {
+    emoji: '🌟',
+    title: 'Дыхание в хорошей форме',
+    subtitle: 'Небольшая настройка даст заметный результат',
+    description: 'Ваши показатели говорят о том, что дыхательная система работает неплохо. Тем не менее есть резервы: оптимизация дыхания повысит качество сна, снизит фоновую усталость и укрепит нервную систему.',
+  },
+  mild: {
+    emoji: '🔆',
+    title: 'Есть лёгкие нарушения дыхания',
+    subtitle: 'Хорошая новость — это легко исправить',
+    description: 'По вашим ответам видны признаки гипервентиляции или ситуативного дыхания ртом. Это типично для городского ритма жизни и хорошо поддаётся коррекции за 2–4 недели практики.',
+  },
+  moderate: {
+    emoji: '⚠️',
+    title: 'Умеренные нарушения дыхания',
+    subtitle: 'Пора начать работу — результат будет быстрым',
+    description: 'Ваши ответы показывают заметные нарушения паттерна дыхания. Хронический стресс и неправильные привычки создают замкнутый круг. Метод Бутейко и целевые техники разорвут его за 3–6 недель.',
+  },
+  severe: {
+    emoji: '🚨',
+    title: 'Выраженные нарушения дыхания',
+    subtitle: 'Нужна персональная работа — я помогу',
+    description: 'Комплекс симптомов указывает на серьёзное нарушение паттерна дыхания, влияющее на все системы организма. Хорошая новость: метод Бутейко специально создан для таких случаев — изменения заметны уже с первого занятия.',
+  },
+};
+
+// ── ДЕТСКИЙ ПОТОК ─────────────────────────────────────────────────────────────
+function calcChildUrgency(d) {
+  let s = 0;
+  const ageU = { '3-4': 20, '5-6': 15, '7-8': 12, '9-10': 10, '11-12': 8, '13-15': 15, '16-17': 18 };
+  s += ageU[d.child_age_detail] || 10;
+  const criticalChild = ['breathing_issues', 'anxiety', 'nightmares', 'hyperactivity', 'sleep_problems'];
+  (d.child_problems_detailed || []).forEach(p => { if (criticalChild.includes(p)) s += 20; });
+  return Math.min(Math.round(s), 100);
+}
+
+function calcChildReadiness(d) {
+  let s = 30;
+  s += { games_stories: 25, reward_system: 20, family_activities: 30, creative_tasks: 22, adult_explanation: 10 }[d.child_motivation_approach] || 15;
+  return Math.min(s, 100);
+}
+
+function calcChildFit(d) {
+  let s = 40;
+  const ageFit = { '3-4': 10, '5-6': 20, '7-8': 25, '9-10': 30, '11-12': 25, '13-15': 15, '16-17': 20 };
+  s += ageFit[d.child_age_detail] || 20;
+  const childStrengths = ['anxiety', 'hyperactivity', 'sleep_problems', 'concentration_issues', 'breathing_issues'];
+  (d.child_problems_detailed || []).forEach(p => { if (childStrengths.includes(p)) s += 12; });
+  return Math.min(s, 100);
+}
+
+function determineChildSegment(total) {
+  if (total >= 75) return 'HOT_LEAD';
+  if (total >= 55) return 'WARM_LEAD';
+  if (total >= 35) return 'COLD_LEAD';
+  return 'NURTURE_LEAD';
+}
+
+function buildChildResult(d) {
+  const urgency  = calcChildUrgency(d);
+  const readiness = calcChildReadiness(d);
+  const fit      = calcChildFit(d);
+  const total    = Math.round(urgency * CHILD_WEIGHTS.urgency + readiness * CHILD_WEIGHTS.readiness + fit * CHILD_WEIGHTS.fit);
+  const segment  = determineChildSegment(total);
+
+  const problems = d.child_problems_detailed || [];
+  const isSmall  = ['3-4', '5-6', '7-8'].includes(d.child_age_detail);
+  const isPreventive = problems.includes('prevention') && problems.length === 1;
+
+  if (isPreventive) {
     return {
-      level: 'moderate',
-      emoji: '🧒',
-      title: 'Есть точки роста',
-      subtitle: `Особое внимание: ${mainIssue}`,
-      description: `По ответам видно, что ребёнку нужна помощь в области: ${mainIssue}. Дыхательные упражнения в игровой форме дают результат уже через 2–3 недели.`,
+      level: 'good', emoji: '🌱',
+      title: 'Отличная профилактика!',
+      subtitle: 'Дыхание ребёнка в норме',
+      description: 'Ребёнок в хорошей форме. Дыхательные практики в виде игры укрепят нервную систему, улучшат концентрацию и иммунитет.',
+      segment, scores: { urgency, readiness, fit, total },
       recommendations: [
-        hasSleep ? '🌙 «Дыхание 4-4-4» перед сном — засыпание за 10 минут' : '🎯 Игровые дыхательные паузы в течение дня',
-        hasBreathing ? '👃 Тренировка носового дыхания через игры с перьями/мыльными пузырями' : '🎮 Дыхательные истории — метод «Дракончик»',
-        '📅 3 занятия в неделю по 7–10 минут достаточно для заметного результата',
+        isSmall ? '🎮 «Дышим как животные» — игровые упражнения 5 мин/день' : '🧘 Утреннее дыхание носом — 3–5 минут перед школой',
+        '🌬️ Носовое дыхание во время прогулок и игр',
+        '💤 Дыхательная медитация перед сном — легко засыпать',
       ],
-      cta: 'Подобрать детскую программу',
+      cta: segment === 'HOT_LEAD' ? 'Записаться на детскую консультацию' : 'Получить детскую программу',
     };
   }
 
-  // ── Взрослый поток ────────────────────────────────────────────────
+  const hasBreathing = problems.includes('breathing_issues');
+  const hasSleep     = problems.includes('sleep_problems') || problems.includes('nightmares');
+  const hasAnxiety   = problems.includes('anxiety') || problems.includes('tantrums');
+  const hasHyper     = problems.includes('hyperactivity');
 
-  // Считаем индекс нарушения (0–100)
-  let score = 0;
+  const mainIssue = hasBreathing ? 'дыхание' : hasSleep ? 'сон и расслабление' : hasAnxiety ? 'тревожность и эмоции' : hasHyper ? 'гиперактивность' : 'общее состояние';
+  const urgencyLabel = segment === 'HOT_LEAD' ? 'severe' : segment === 'WARM_LEAD' ? 'moderate' : 'mild';
 
-  // Стресс (0–10) → вес ×4
-  const stressLevel = Number(userData.stress_level) || 0;
-  score += stressLevel * 4;
-
-  // Качество сна (инвертированное) → вес ×3
-  const sleepQuality = Number(userData.sleep_quality) || 5;
-  score += (10 - sleepQuality) * 3;
-
-  // Способ дыхания
-  const breathingMethodScore = {
-    nose: 0,
-    mixed: 8,
-    mouth: 18,
-    unaware: 12,
-  }[userData.breathing_method] || 0;
-  score += breathingMethodScore;
-
-  // Частота проблем с дыханием
-  const breathingFreqScore = {
-    never: 0,
-    rarely: 4,
-    sometimes: 8,
-    often: 14,
-    constantly: 20,
-  }[userData.breathing_frequency] || 0;
-  score += breathingFreqScore;
-
-  // Поверхностное дыхание
-  const shallowScore = {
-    no: 0,
-    sometimes: 5,
-    yes_often: 12,
-  }[userData.shallow_breathing] || 0;
-  score += shallowScore;
-
-  // Дыхание в стрессе
-  const stressBreathScore = {
-    conscious_breathing: 0,
-    no_change: 3,
-    breath_holding: 8,
-    rapid_shallow: 10,
-    air_shortage: 12,
-    mouth_breathing: 10,
-  }[userData.stress_breathing] || 0;
-  score += stressBreathScore;
-
-  // Физическая активность (чем меньше — тем хуже)
-  const activityScore = {
-    daily: 0,
-    regular: 0,
-    sometimes: 3,
-    rarely: 6,
-    never: 10,
-  }[userData.physical_activity] || 0;
-  score += activityScore;
-
-  // Хронические заболевания — небольшой бонус к тяжести
-  const conditions = Array.isArray(userData.chronic_conditions) ? userData.chronic_conditions : [];
-  if (!conditions.includes('none') && conditions.length > 0) {
-    score += Math.min(conditions.length * 3, 12);
-  }
-
-  // Нормируем в диапазон 0–100
-  // Теоретический максимум ≈ 157, но на практике ~120
-  const normalized = Math.min(100, Math.round((score / 110) * 100));
-
-  // ── Определяем уровень ──────────────────────────────────────────
-  let level;
-  if (normalized <= 25) level = 'good';
-  else if (normalized <= 50) level = 'mild';
-  else if (normalized <= 72) level = 'moderate';
-  else level = 'severe';
-
-  // ── Приоритетная проблема для персонализации ────────────────────
-  const priority = userData.priority_problem || 'chronic_stress';
-  const goals = Array.isArray(userData.main_goals) ? userData.main_goals : [];
-  const experience = userData.breathing_experience || 'never';
-  const timeCommit = userData.time_commitment || '10-15_minutes';
-
-  const isBeginnerFriendly = ['never', 'few_times', 'theory_only'].includes(experience);
-
-  // ── Рекомендации по приоритетной проблеме ───────────────────────
-  const techniqueByPriority = {
-    chronic_stress: {
-      name: 'Техника 4-7-8',
-      desc: 'вдох 4 сек → задержка 7 → выдох 8. Снижает кортизол за 5 минут',
-    },
-    insomnia: {
-      name: 'Метод «Военного засыпания»',
-      desc: 'диафрагмальное дыхание + прогрессивное расслабление — засыпание за 10–15 мин',
-    },
-    breathing_issues: {
-      name: 'Метод Бутейко',
-      desc: 'уменьшение объёма дыхания, восстановление нормы CO₂ — убирает одышку',
-    },
-    high_pressure: {
-      name: 'Резонансное дыхание 5–5',
-      desc: 'вдох 5 сек + выдох 5 сек — снижает давление на 5–10 мм рт.ст. за сеанс',
-    },
-    anxiety: {
-      name: 'Физиологический вздох',
-      desc: 'двойной вдох носом + долгий выдох ртом — снимает тревогу за 1–2 минуты',
-    },
-    fatigue: {
-      name: 'Капалабхати (облегчённая)',
-      desc: 'ритмичные короткие выдохи — активирует симпатику, даёт бодрость без кофеина',
-    },
-    concentration_issues: {
-      name: 'Дыхание 4-4-4-4 (box breathing)',
-      desc: 'квадратное дыхание — техника Navy SEALs для фокуса и ясности мышления',
-    },
-  };
-
-  const technique = techniqueByPriority[priority] || techniqueByPriority['chronic_stress'];
-
-  // ── Время практики ───────────────────────────────────────────────
-  const timeMap = {
-    '3-5_minutes': '3–5 минут в день',
-    '10-15_minutes': '10–15 минут утром',
-    '20-30_minutes': '20–30 минут — полноценный сеанс',
-    '30+_minutes': '30+ минут — углублённая практика',
-  };
-  const timeLabel = timeMap[timeCommit] || '10–15 минут в день';
-
-  // ── Дополнительные рекомендации по целям ────────────────────────
-  const extraTips = [];
-  if (goals.includes('improve_sleep') || priority === 'insomnia') {
-    extraTips.push('😴 Дыхание 4-7-8 за 20 минут до сна — засыпание ускоряется втрое');
-  }
-  if (goals.includes('reduce_anxiety') || priority === 'anxiety') {
-    extraTips.push('😌 Физиологический вздох в момент тревоги — работает за 30 секунд');
-  }
-  if (goals.includes('increase_energy') || priority === 'fatigue') {
-    extraTips.push('⚡ Утреннее дыхание через нос — активирует симпатическую нервную систему');
-  }
-  if (goals.includes('normalize_pressure') || priority === 'high_pressure') {
-    extraTips.push('❤️ Резонансное дыхание 5+5 — снижает давление без таблеток');
-  }
-  if (userData.breathing_method === 'mouth') {
-    extraTips.push('👃 Tape-метод ночью — безопасно переключает на носовое дыхание во сне');
-  }
-
-  // Дополняем до 3 советов
-  const fallbackTips = [
-    '🧘 Диафрагмальное дыхание — основа всех техник, начните с него',
-    isBeginnerFriendly
-      ? '📱 Начните с 3 минут в день — малый старт даёт большой результат'
-      : '💪 Ваш опыт позволяет быстро освоить продвинутые техники',
-    `⏰ ${timeLabel} — оптимальный режим для вашего графика`,
-  ];
-  while (extraTips.length < 3) {
-    const tip = fallbackTips.shift();
-    if (tip && !extraTips.includes(tip)) extraTips.push(tip);
-  }
-
-  // ── Итоговые объекты по уровню ───────────────────────────────────
-  const levelData = {
-    good: {
-      emoji: '🌟',
-      title: 'Дыхание в хорошей форме',
-      subtitle: 'Небольшая настройка даст заметный результат',
-      description:
-        `Ваши показатели говорят о том, что дыхательная система работает неплохо. Тем не менее есть резервы: оптимизация дыхания повысит качество сна, снизит фоновую усталость и укрепит нервную систему.`,
-    },
-    mild: {
-      emoji: '🔆',
-      title: 'Есть лёгкие нарушения дыхания',
-      subtitle: 'Хорошая новость — это легко исправить',
-      description:
-        `По вашим ответам видны признаки гипервентиляции или ситуативного дыхания ртом. Это типично для городского ритма жизни и хорошо поддаётся коррекции за 2–4 недели практики.`,
-    },
-    moderate: {
-      emoji: '⚠️',
-      title: 'Умеренные нарушения дыхания',
-      subtitle: 'Пора начать работу — результат будет быстрым',
-      description:
-        `Ваши ответы показывают заметные нарушения паттерна дыхания. Хронический стресс и неправильные привычки дыхания создают замкнутый круг. Метод Бутейко и целевые техники разорвут его за 3–6 недель.`,
-    },
-    severe: {
-      emoji: '🚨',
-      title: 'Выраженные нарушения дыхания',
-      subtitle: 'Нужна персональная работа — я помогу',
-      description:
-        `Комплекс симптомов указывает на серьёзное нарушение паттерна дыхания. Это влияет на все системы организма. Хорошая новость: метод Бутейко специально разработан для таких случаев — изменения заметны уже с первого занятия.`,
-    },
-  };
-
-  const ld = levelData[level];
+  const recs = [];
+  if (hasSleep)     recs.push('🌙 Дыхание 4-4-4 перед сном — засыпание за 10 минут');
+  if (hasBreathing) recs.push('👃 Тренировка носового дыхания через игры с мыльными пузырями');
+  if (hasAnxiety)   recs.push('🧸 «Дыхание с игрушкой» на животе — успокаивает за 3–5 минут');
+  if (hasHyper)     recs.push('🐢 Игра «Черепаха» — медленное дыхание снимает возбуждение');
+  recs.push('📅 3 занятия в неделю по 7–10 минут достаточно для заметного результата');
 
   return {
+    level: urgencyLabel,
+    emoji: segment === 'HOT_LEAD' ? '🆘' : '🧒',
+    title: segment === 'HOT_LEAD' ? 'Требуется срочная помощь ребёнку' : 'Есть точки роста',
+    subtitle: `Особое внимание: ${mainIssue}`,
+    description: `По ответам видно, что ребёнку нужна помощь в области: ${mainIssue}. Дыхательные упражнения в игровой форме дают результат уже через 2–3 недели.`,
+    segment,
+    scores: { urgency, readiness, fit, total },
+    recommendations: [...new Set(recs)].slice(0, 3),
+    cta: segment === 'HOT_LEAD' ? 'Записаться на детскую консультацию' : 'Подобрать детскую программу',
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Главная экспортируемая функция — вызывается из BreathingTest.jsx
+// ─────────────────────────────────────────────────────────────────────────────
+export function calculateResult(userData) {
+  // Детский поток
+  if (userData.age_group === 'for_child') {
+    return buildChildResult(userData);
+  }
+
+  // Взрослый VERSE-анализ
+  const urgency  = calcUrgency(userData);
+  const readiness = calcReadiness(userData);
+  const fit      = calcFit(userData);
+  const total    = Math.round(urgency * SEGMENT_WEIGHTS.urgency + readiness * SEGMENT_WEIGHTS.readiness + fit * SEGMENT_WEIGHTS.fit);
+  const segment  = determineSegment(total);
+  const primaryIssue = identifyPrimaryIssue(userData);
+  const level    = urgencyToLevel(urgency);
+  const ld       = LEVEL_DATA[level];
+  const technique = TECHNIQUE_MAP[primaryIssue] || TECHNIQUE_MAP['chronic_stress'];
+  const recommendations = buildRecommendations(primaryIssue, segment, userData);
+
+  // Сегментные подписи
+  const segmentLabel = {
+    HOT_LEAD:    { badge: '🔴 Высокий приоритет', hint: 'Ситуация требует внимания — персональная работа даст быстрый результат' },
+    WARM_LEAD:   { badge: '🟡 Хорошая мотивация', hint: 'Вы готовы к изменениям — регулярные занятия дадут результат через неделю' },
+    COLD_LEAD:   { badge: '🟢 Умеренный интерес', hint: 'Небольшая настройка дыхания заметно улучшит самочувствие' },
+    NURTURE_LEAD:{ badge: '🔵 Профилактика', hint: 'Дыхательные практики как инвестиция в долгосрочное здоровье' },
+  }[segment];
+
+  return {
+    // Визуальный уровень для цветовой схемы UI
     level,
-    score: normalized,
+    // VERSE-данные
+    segment,
+    scores: { urgency, readiness, fit, total },
+    segmentLabel,
+    // Отображаемое
     emoji: ld.emoji,
     title: ld.title,
     subtitle: ld.subtitle,
     description: ld.description,
+    profileName: getProfileName(userData),
+    primaryIssue,
     technique,
-    recommendations: extraTips.slice(0, 3),
-    cta: level === 'severe' || level === 'moderate'
-      ? 'Записаться на пробное занятие'
-      : 'Получить персональный план',
-    timeLabel,
-    isBeginnerFriendly,
+    recommendations,
+    cta: getCtaText(segment),
+    // Вспомогательные флаги для UI
+    isBeginnerFriendly: ['never', 'few_times', 'theory_only'].includes(userData.breathing_experience || 'never'),
   };
 }
