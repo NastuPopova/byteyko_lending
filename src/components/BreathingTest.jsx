@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CheckCircle, Clock, Sparkles, TrendingUp, ChevronLeft, ChevronRight, X, ArrowLeft } from 'lucide-react';
-import { QUESTIONS, getFlow, getNextQuestionId, getPrevQuestionId, getTotalQuestions, calculateResult } from '../data/surveyQuestions';
+import { QUESTIONS, getFlow, getNextQuestionId, getPrevQuestionId, getTotalQuestions, getQuestionIndex, calculateResult } from '../data/surveyQuestions';
 
 const features = [
   { icon: <Sparkles className="h-6 w-6" />, title: 'Адаптивные вопросы', description: 'Следующий вопрос формируется на основе ваших ответов' },
@@ -9,7 +9,6 @@ const features = [
   { icon: <Clock className="h-6 w-6" />, title: 'Всего 2–3 минуты', description: 'Быстрое прохождение без регистрации и лишних данных' },
 ];
 
-// ──── Цвета по уровню ────────────────────────────────────────────────────────
 const levelColors = {
   good:     { bg: 'from-emerald-50 to-teal-50', badge: 'bg-emerald-100 text-emerald-700', bar: 'bg-emerald-400', border: 'border-emerald-200' },
   mild:     { bg: 'from-yellow-50 to-orange-50', badge: 'bg-yellow-100 text-yellow-700', bar: 'bg-yellow-400', border: 'border-yellow-200' },
@@ -17,22 +16,18 @@ const levelColors = {
   severe:   { bg: 'from-red-50 to-rose-50',      badge: 'bg-red-100 text-red-700',      bar: 'bg-red-400',    border: 'border-red-200' },
 };
 
-// ──── Движок анкеты ───────────────────────────────────────────────────────────
 const SurveyEngine = ({ onClose }) => {
-  const [screen, setScreen] = useState('start'); // 'start' | 'survey' | 'done'
+  const [screen, setScreen] = useState('start');
   const [userData, setUserData] = useState({});
   const [currentId, setCurrentId] = useState('age_group');
   const [multiSelected, setMultiSelected] = useState([]);
   const [animating, setAnimating] = useState(false);
   const [result, setResult] = useState(null);
 
-  const flow = getFlow(userData);
+  // Прогресс-бар: используем getQuestionIndex — номер текущего вопроса среди видимых
   const total = getTotalQuestions(userData);
-  const completedCount = flow.filter((id) => {
-    const q = QUESTIONS[id];
-    return q && userData[id] !== undefined && (!q.condition || q.condition(userData));
-  }).indexOf(currentId);
-  const progress = Math.max(0, Math.round((completedCount / total) * 100));
+  const currentIdx = getQuestionIndex(currentId, userData);
+  const progress = Math.max(0, Math.round((currentIdx / total) * 100));
 
   const question = QUESTIONS[currentId];
 
@@ -81,7 +76,7 @@ const SurveyEngine = ({ onClose }) => {
   };
   const handleScale = (value) => { goNext({ [currentId]: value }); };
 
-  // ──── Стартовый экран ──────────────────────────────────────────────────
+  // ──── Стартовый экран ──────────────────────────────────────────────────────
   if (screen === 'start') {
     return (
       <ModalShell onClose={onClose} progress={0}>
@@ -107,10 +102,10 @@ const SurveyEngine = ({ onClose }) => {
     );
   }
 
-  // ──── Экран результата ─────────────────────────────────────────────────────
+  // ──── Экран результата ───────────────────────────────────────────────────
   if (screen === 'done' && result) {
     const colors = levelColors[result.level] || levelColors.mild;
-    const hasScore = typeof result.score === 'number';
+    const score = result.scores ? result.scores.urgency : null;
 
     return (
       <ModalShell onClose={onClose} progress={100}>
@@ -124,16 +119,16 @@ const SurveyEngine = ({ onClose }) => {
             </div>
           </div>
 
-          {hasScore && (
+          {score !== null && (
             <div className="mb-3">
               <div className="flex justify-between text-xs text-gray-500 mb-1">
                 <span>Индекс нарушения дыхания</span>
-                <span className="font-bold text-gray-700">{result.score}/100</span>
+                <span className="font-bold text-gray-700">{score}/100</span>
               </div>
               <div className="w-full bg-white/70 rounded-full h-2.5">
                 <div
                   className={`${colors.bar} rounded-full h-2.5 transition-all duration-700`}
-                  style={{ width: `${result.score}%` }}
+                  style={{ width: `${score}%` }}
                 />
               </div>
             </div>
@@ -163,7 +158,7 @@ const SurveyEngine = ({ onClose }) => {
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">АП</div>
             <div>
               <p className="text-sm font-bold text-gray-900">Александр Попов</p>
-              <p className="text-xs text-gray-500">Методист по дыханию Бутейко · <span className="text-orange-600">@AS_Popov87</span></p>
+              <p className="text-xs text-gray-500">Методист по дыханию Бутейко · <span className="text-orange-600">@AS_Popov87</span></p>
             </div>
           </div>
           <p className="text-sm text-gray-700 leading-relaxed">
@@ -171,7 +166,7 @@ const SurveyEngine = ({ onClose }) => {
           </p>
         </div>
 
-        {/* CTA — оплата через бот */}
+        {/* CTA */}
         <a
           href="https://t.me/breathing_opros_bot"
           target="_blank"
@@ -190,7 +185,7 @@ const SurveyEngine = ({ onClose }) => {
     );
   }
 
-  // ──── Экран вопроса ─────────────────────────────────────────────────────────
+  // ──── Экран вопроса ───────────────────────────────────────────────────────
   return (
     <ModalShell onClose={onClose} progress={progress} onBack={question?.allowBack ? goBack : null}>
       <div className={`transition-opacity duration-200 ${animating ? 'opacity-0' : 'opacity-100'}`}>
@@ -198,7 +193,6 @@ const SurveyEngine = ({ onClose }) => {
           {question?.text}
         </p>
 
-        {/* Одиночный выбор */}
         {question?.type === 'single_choice' && (
           <div className="flex flex-col gap-2">
             {question.options.map((opt) => (
@@ -213,7 +207,6 @@ const SurveyEngine = ({ onClose }) => {
           </div>
         )}
 
-        {/* Шкала */}
         {question?.type === 'scale' && (
           <div className="flex flex-wrap gap-2 justify-center">
             {question.options.map((opt) => (
@@ -228,7 +221,6 @@ const SurveyEngine = ({ onClose }) => {
           </div>
         )}
 
-        {/* Множественный выбор */}
         {question?.type === 'multiple_choice' && (
           <div className="flex flex-col gap-2">
             <p className="text-xs text-gray-500 mb-1">Макс. {question.maxSelections} варианта</p>
@@ -273,9 +265,7 @@ const ModalShell = ({ children, onClose, progress, onBack }) => (
     <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl relative overflow-hidden flex flex-col"
       style={{ maxHeight: '92dvh' }}
     >
-      {/* Шапка */}
       <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-4 py-3 text-white flex-shrink-0">
-        {/* Драг-хандл на мобайле */}
         <div className="flex justify-center mb-2 sm:hidden">
           <div className="w-10 h-1 bg-white/40 rounded-full" />
         </div>
@@ -300,7 +290,6 @@ const ModalShell = ({ children, onClose, progress, onBack }) => (
             <X className="h-4 w-4" />
           </button>
         </div>
-        {/* Прогресс-бар */}
         <div className="w-full bg-white/30 rounded-full h-1.5">
           <div
             className="bg-white rounded-full h-1.5 transition-all duration-500"
@@ -309,13 +298,11 @@ const ModalShell = ({ children, onClose, progress, onBack }) => (
         </div>
         <p className="text-teal-100 text-xs mt-1">{progress}% завершено</p>
       </div>
-      {/* Тело скроллится */}
       <div className="px-4 py-5 overflow-y-auto flex-1">{children}</div>
     </div>
   </div>
 );
 
-// ──── Главный компонент ───────────────────────────────────────────────────────
 const BreathingTest = () => {
   const [currentScreen, setCurrentScreen] = useState(0);
   const [showSurvey, setShowSurvey] = useState(false);
@@ -378,7 +365,6 @@ const BreathingTest = () => {
               </div>
             </div>
 
-            {/* Мокап */}
             <div className="relative">
               <div className="relative mx-auto" style={{ maxWidth: '380px' }}>
                 <div className="relative bg-gray-900 rounded-[3rem] p-3 shadow-2xl">
