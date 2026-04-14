@@ -2,7 +2,7 @@ const BOT_URL = 'https://breathing-lead-bot.bothost.ru';
 
 // Fallback: прямой Telegram если бот недоступен
 const BOT_TOKEN = '8170694947:AAE_Gqn0QBFYo8_meOjqvGW85PJ06uoc8fc';
-const CHAT_ID = '981828628';
+const CHAT_ID   = '981828628';
 
 const QUESTION_LABELS = {
   age_group:          'Возраст',
@@ -17,34 +17,39 @@ const QUESTION_LABELS = {
   chronic_conditions: 'Хронические заболевания',
 };
 
-// Маппинг уровня → сегмент для бота
-const LEVEL_TO_SEGMENT = {
-  severe:   'hot',
-  moderate: 'warm',
-  mild:     'warm',
-  good:     'cold',
-};
+function fetchWithTimeout(url, options, ms = 8000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  return fetch(url, { ...options, signal: controller.signal })
+    .finally(() => clearTimeout(timer));
+}
 
 async function sendViaBothost({ contact, userData, result }) {
+  // Имена полей совпадают с index.js бота
   const payload = {
-    source: 'landing',
     name:    contact.name,
-    email:   contact.email   || '',
-    phone:   contact.phone   || '',
-    segment: LEVEL_TO_SEGMENT[result?.level] || 'warm',
+    email:   contact.email  || '',
+    phone:   contact.phone  || '',
+    segment: result?.level  || 'mild',   // hot / moderate / mild / good
     score:   result?.scores?.urgency ?? 0,
-    level:   result?.level   || 'mild',
-    title:   result?.title   || '',
-    answers: userData,
+    profile: result?.title  || '',
+    tech:    result?.technique || '',
+    goals:   Array.isArray(userData.main_goal)
+               ? userData.main_goal.join(', ')
+               : (userData.main_goal || ''),
   };
 
-  const resp = await fetch(`${BOT_URL}/notify-lead`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(payload),
-  });
+  const resp = await fetchWithTimeout(
+    `${BOT_URL}/notify-lead`,
+    {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload),
+    },
+    8000
+  );
 
-  if (!resp.ok) throw new Error(`bothost ${resp.status}`);
+  if (!resp.ok) throw new Error(`bothost ответил ${resp.status}`);
   return true;
 }
 
@@ -61,39 +66,40 @@ async function sendViaTelegramDirect({ contact, userData, result }) {
   const levelEmoji = { good: '🟢', mild: '🟡', moderate: '🟠', severe: '🔴' }[result?.level] || '⚪';
 
   const text = [
-    '🔔 *Новая запись на пробное занятие!*',
+    '🔔 *Новая запись (лендинг)!*',
     '',
     `👤 *${contact.name}*`,
     contact.email ? `📧 ${contact.email}` : '',
     contact.phone ? `📞 ${contact.phone}` : '',
     '',
     `${levelEmoji} *Результат:* ${result?.title || '—'} — ${result?.scores?.urgency ?? '?'}/100`,
-    `*Уровень:* ${result?.level || '—'}`,
     '',
-    '📝 *Ответы на анкету:*',
+    '📝 *Ответы:*',
     answers,
     '',
-    `⏰ ${new Date().toLocaleString('ru-RU', { timeZone: 'Asia/Yekaterinburg' })} (UTC+5)`,
+    `⏰ ${new Date().toLocaleString('ru-RU', { timeZone: 'Asia/Yekaterinburg' })}`,
   ].filter(Boolean).join('\n');
 
-  const resp = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ chat_id: CHAT_ID, text, parse_mode: 'Markdown' }),
-  });
+  const resp = await fetchWithTimeout(
+    `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+    {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ chat_id: CHAT_ID, text, parse_mode: 'Markdown' }),
+    },
+    8000
+  );
 
   return resp.ok;
 }
 
 export async function sendLeadToTelegram({ contact, userData, result }) {
   try {
-    // Сначала пробуем через бот (статистика + админка)
     await sendViaBothost({ contact, userData, result });
     console.log('✅ Лид отправлен через bothost');
     return true;
   } catch (err) {
-    console.warn('⚠️ bothost недоступен, fallback на прямой Telegram:', err.message);
-    // Fallback — прямой Telegram чтобы лид не потерялся
+    console.warn('⚠️ bothost недоступен, fallback на Telegram:', err.message);
     return sendViaTelegramDirect({ contact, userData, result });
   }
 }
