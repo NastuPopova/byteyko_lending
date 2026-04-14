@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import PageNavigation from './components/PageNavigation';
@@ -21,6 +21,8 @@ import Footer from './components/Footer';
 import './App.css';
 
 function App() {
+  const [surveyOpen, setSurveyOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -29,7 +31,7 @@ function App() {
       <BreathingIssues />
       <Symptoms />
       <BreathingConsequences />
-      <BreathingTest />
+      <BreathingTest surveyOpen={surveyOpen} onSurveyToggle={setSurveyOpen} />
       <ScienceBlock />
       <AboutBreathing />
       <AboutMe />
@@ -39,9 +41,9 @@ function App() {
       <FAQ />
       <BuyCourse />
       <Footer />
-      <ScrollToTop />
-      <PopupNotifications />
-      <StickyCTA />
+      <ScrollToTop hidden={surveyOpen} />
+      <PopupNotifications hidden={surveyOpen} />
+      <StickyCTA hidden={surveyOpen} />
     </div>
   );
 }
