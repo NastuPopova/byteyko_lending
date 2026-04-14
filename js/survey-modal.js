@@ -1,13 +1,15 @@
 // =============================================
 // МОДАЛЬНОЕ ОКНО ДИАГНОСТИКИ ДЫХАНИЯ
-// Часть 4 — сбор лидов + отправка в Telegram
+// Часть 4 — сбор лидов + отправка через прокси
 // =============================================
 
 (function () {
 
   // --- Конфиг отправки ---
-  var TG_BOT_TOKEN = '7416243262:AAE8mDCuV2o9FtYE_iO8sVsn8Sg-db3CfaM';
-  var TG_CHAT_ID   = '981828628';
+  // Токен бота НЕ хранится в клиентском коде.
+  // Укажите URL вашего бота на bothost.ru, который принимает POST /notify-lead
+  // Пример: 'https://my-bot.bothost.ru/notify-lead'
+  var LEAD_ENDPOINT = 'https://REPLACE_WITH_YOUR_BOTHOST_URL/notify-lead';
 
   // --- HTML модалки ---
   var modalHTML = `
@@ -79,7 +81,7 @@
           </div>
         </div>
 
-        <!-- ЭКРАН СБОРА КОНТАКТОВ (НОВЫЙ) -->
+        <!-- ЭКРАН СБОРА КОНТАКТОВ -->
         <div id="diagLeadForm" class="diag-screen" style="display:none">
           <div class="diag-lead-wrap">
             <div class="diag-lead-icon">🎯</div>
@@ -317,7 +319,6 @@
   function finishSurvey() {
     progressWrap.style.display = 'none';
 
-    // Считаем результат и кэшируем
     if (typeof BreathingAnalysis !== 'undefined') {
       var analysis = new BreathingAnalysis();
       cachedResult = analysis.analyze(engine.answers);
@@ -326,7 +327,6 @@
       cachedResult = null;
     }
 
-    // Показываем форму контактов
     showScreen(diagLeadForm);
   }
 
@@ -373,34 +373,22 @@
     }, 30);
   }
 
-  // --- Отправка лида в Telegram ---
-  function sendLeadToTelegram(lead, resultData) {
-    var segment  = resultData ? resultData.segment  : '—';
-    var profile  = resultData ? resultData.profileName : '—';
-    var tech     = resultData ? '«' + resultData.message.techniqueName + '»' : '—';
+  // --- Отправка лида через прокси-бот (токен только на сервере) ---
+  function sendLeadToBot(lead, resultData) {
+    var payload = {
+      name:    lead.name,
+      phone:   lead.phone,
+      email:   lead.email,
+      tg:      lead.tg || '',
+      segment: resultData ? resultData.segment      : '',
+      profile: resultData ? resultData.profileName  : '',
+      tech:    resultData ? resultData.message.techniqueName : ''
+    };
 
-    var tgText =
-      '🌐 <b>Новый лид с сайта (анкета)</b>\n\n' +
-      '👤 <b>Имя:</b> ' + escHtml(lead.name) + '\n' +
-      '📱 <b>Телефон:</b> ' + escHtml(lead.phone) + '\n' +
-      '📧 <b>Email:</b> ' + escHtml(lead.email) + '\n' +
-      (lead.tg ? '✈️ <b>Telegram:</b> ' + escHtml(lead.tg) + '\n' : '') +
-      '\n' +
-      '📊 <b>Результат диагностики:</b>\n' +
-      '  • Сегмент: ' + segment + '\n' +
-      '  • Профиль: ' + escHtml(profile) + '\n' +
-      '  • Техника: ' + escHtml(tech) + '\n' +
-      '\n' +
-      '🕐 ' + new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
-
-    fetch('https://api.telegram.org/bot' + TG_BOT_TOKEN + '/sendMessage', {
+    fetch(LEAD_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: TG_CHAT_ID,
-        text: tgText,
-        parse_mode: 'HTML'
-      })
+      body: JSON.stringify(payload)
     }).catch(function() {
       // Тихий fallback — не блокируем UX при ошибке сети
     });
@@ -458,9 +446,8 @@
       tg:    document.getElementById('leadTg').value.trim()
     };
 
-    sendLeadToTelegram(lead, cachedResult);
+    sendLeadToBot(lead, cachedResult);
 
-    // Показываем результат через 600ms (не ждём ответа сервера — UX важнее)
     setTimeout(function() {
       showResult();
     }, 600);
