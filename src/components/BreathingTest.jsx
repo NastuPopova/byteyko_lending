@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CheckCircle, Clock, Sparkles, TrendingUp, ChevronLeft, ChevronRight, X, ArrowLeft, User, Mail, Phone } from 'lucide-react';
 import { QUESTIONS, getNextQuestionId, getPrevQuestionId, getTotalQuestions, getQuestionIndex, calculateResult } from '../data/surveyQuestions';
 import { sendLeadToTelegram } from '../utils/telegramNotify';
@@ -126,6 +126,8 @@ const SurveyEngine = ({ onClose }) => {
   const [userData, setUserData]     = useState({});
   const [currentId, setCurrentId]   = useState('age_group');
   const [multiSelected, setMultiSelected] = useState([]);
+  // FIX #2: отдельный стейт для подсветки scale-кнопок, сбрасывается при смене вопроса
+  const [scaleSelected, setScaleSelected] = useState(null);
   const [animating, setAnimating]   = useState(false);
   const [result, setResult]         = useState(null);
   const [sending, setSending]       = useState(false);
@@ -139,6 +141,11 @@ const SurveyEngine = ({ onClose }) => {
 
   const question = QUESTIONS[currentId];
 
+  // FIX #2: сбрасываем scaleSelected при каждой смене вопроса
+  useEffect(() => {
+    setScaleSelected(null);
+  }, [currentId]);
+
   const goNext = (newData) => {
     const updated = { ...userData, ...newData };
     setUserData(updated);
@@ -146,6 +153,7 @@ const SurveyEngine = ({ onClose }) => {
     setAnimating(true);
     setTimeout(() => {
       setMultiSelected([]);
+      setScaleSelected(null);
       if (next) {
         setCurrentId(next);
       } else {
@@ -164,6 +172,7 @@ const SurveyEngine = ({ onClose }) => {
       setTimeout(() => {
         setCurrentId(prev);
         setMultiSelected(userData[prev] || []);
+        setScaleSelected(null);
         setAnimating(false);
       }, 200);
     } else {
@@ -172,7 +181,11 @@ const SurveyEngine = ({ onClose }) => {
   };
 
   const handleSingle      = (value) => goNext({ [currentId]: value });
-  const handleScale       = (value) => goNext({ [currentId]: value });
+  // FIX #2: сначала визуально подсвечиваем, потом переходим
+  const handleScale       = (value) => {
+    setScaleSelected(value);
+    setTimeout(() => goNext({ [currentId]: value }), 150);
+  };
   const handleMultiToggle = (value) => {
     setMultiSelected(prev => {
       if (prev.includes(value)) return prev.filter(v => v !== value);
@@ -258,12 +271,22 @@ const SurveyEngine = ({ onClose }) => {
           </p>
         </div>
 
+        {/* FIX #3: цена 1500 на отдельной строке */}
         <button
           onClick={handleBook}
           disabled={sending}
-          className="inline-flex items-center justify-center gap-2 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3.5 rounded-xl text-base hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] mb-2 disabled:opacity-70 disabled:cursor-wait"
+          className="inline-flex flex-col items-center justify-center gap-0.5 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3.5 rounded-xl text-base hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] mb-2 disabled:opacity-70 disabled:cursor-wait"
         >
-          {sending ? '⏳ Отправляем...' : sent ? '✅ Записаться в Telegram →' : '📲 Записаться на пробное занятие — 1 500 ₽ →'}
+          {sending ? (
+            <span>⏳ Отправляем...</span>
+          ) : sent ? (
+            <span>✅ Записаться в Telegram →</span>
+          ) : (
+            <>
+              <span>📲 Записаться на пробное занятие →</span>
+              <span className="text-sm font-semibold opacity-90">1 500 ₽</span>
+            </>
+          )}
         </button>
         <button onClick={onClose} className="w-full text-gray-400 text-sm hover:text-gray-600 transition-colors py-1">Закрыть</button>
       </ModalShell>
@@ -287,14 +310,22 @@ const SurveyEngine = ({ onClose }) => {
           </div>
         )}
 
+        {/* FIX #2: scale использует scaleSelected (не userData) для подсветки */}
         {question?.type === 'scale' && (
           <div className="flex flex-wrap gap-2 justify-center">
-            {question.options.map(opt => (
-              <button key={opt.value} onClick={() => handleScale(opt.value)}
-                className="w-12 h-12 rounded-full border-2 border-gray-200 hover:border-teal-400 hover:bg-teal-100 font-bold text-gray-700 text-sm transition-all duration-150 active:scale-95">
-                {opt.label}
-              </button>
-            ))}
+            {question.options.map(opt => {
+              const isActive = scaleSelected === opt.value;
+              return (
+                <button key={opt.value} onClick={() => handleScale(opt.value)}
+                  className={`w-12 h-12 rounded-full border-2 font-bold text-sm transition-all duration-150 active:scale-95 ${
+                    isActive
+                      ? 'border-teal-500 bg-teal-500 text-white scale-110'
+                      : 'border-gray-200 hover:border-teal-400 hover:bg-teal-100 text-gray-700'
+                  }`}>
+                  {opt.label}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -324,21 +355,28 @@ const SurveyEngine = ({ onClose }) => {
   );
 };
 
-// ──── Оболочка модалки (mobile-first) ────────────────────────────────────────
+// ──── Оболочка модалки (mobile + desktop scroll lock) ─────────────────────────
 const ModalShell = ({ children, onClose, progress, onBack }) => {
-  // Блокируем скролл страницы пока модалка открыта
+  // FIX #1: блокируем скролл на ВСЕХ устройствах (мобильный + десктоп)
   useEffect(() => {
     const scrollY = window.scrollY;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
     document.body.style.position = 'fixed';
     document.body.style.top = `-${scrollY}px`;
     document.body.style.width = '100%';
     document.body.style.overflowY = 'scroll';
+    // Компенсируем смещение от исчезновения скроллбара на десктопе
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
 
     return () => {
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.width = '';
       document.body.style.overflowY = '';
+      document.body.style.paddingRight = '';
       window.scrollTo(0, scrollY);
     };
   }, []);
