@@ -1,7 +1,8 @@
 const BOT_URL = 'https://breathing-lead-bot.bothost.ru';
 
-// Fallback: прямой Telegram если бот недоступен
-const BOT_TOKEN = '8170694947:AAE_Gqn0QBFYo8_meOjqvGW85PJ06uoc8fc';
+// Fallback: прямой Telegram если bothost недоступен
+// Используем @breathing_diagnostic_bot (единый бот)
+const BOT_TOKEN = '7416243262:AAE8mDCuV2o9FtYE_iO8sVsn8Sg-db3CfaM';
 const CHAT_ID   = '981828628';
 
 const QUESTION_LABELS = {
@@ -25,12 +26,11 @@ function fetchWithTimeout(url, options, ms = 8000) {
 }
 
 async function sendViaBothost({ contact, userData, result }) {
-  // Имена полей совпадают с index.js бота
   const payload = {
     name:    contact.name,
     email:   contact.email  || '',
     phone:   contact.phone  || '',
-    segment: result?.level  || 'mild',   // hot / moderate / mild / good
+    segment: result?.level  || 'mild',
     score:   result?.scores?.urgency ?? 0,
     profile: result?.title  || '',
     tech:    result?.technique || '',
@@ -96,10 +96,10 @@ async function sendViaTelegramDirect({ contact, userData, result }) {
 export async function sendLeadToTelegram({ contact, userData, result }) {
   try {
     await sendViaBothost({ contact, userData, result });
-    console.log('✅ Лид отправлен через bothost');
+    console.log('✅ Лид отправлен через bothost (статистика)');
     return true;
   } catch (err) {
-    console.warn('⚠️ bothost недоступен, fallback на Telegram:', err.message);
+    console.warn('⚠️ bothost недоступен, fallback:', err.message);
     return sendViaTelegramDirect({ contact, userData, result });
   }
 }
