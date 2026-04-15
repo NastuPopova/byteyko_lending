@@ -7,7 +7,7 @@ const features = [
   { icon: <Sparkles className="h-6 w-6" />, title: 'Адаптивные вопросы', description: 'Следующий вопрос формируется на основе ваших ответов' },
   { icon: <CheckCircle className="h-6 w-6" />, title: 'Персональные рекомендации', description: 'Получите индивидуальный план действий по результатам теста' },
   { icon: <TrendingUp className="h-6 w-6" />, title: 'Оценка состояния дыхания', description: 'Узнайте, насколько правильно вы дышите прямо сейчас' },
-  { icon: <Clock className="h-6 w-6" />, title: 'Всего 2–3 минуты', description: 'Быстрое прохождение без регистрации и лишних данных' },
+  { icon: <Clock className="h-6 w-6" />, title: 'Всего 2–3 минуты', description: 'Только имя и контакт — больше ничего лишнего' },
 ];
 
 const levelColors = {
@@ -128,13 +128,9 @@ const SurveyEngine = ({ onClose }) => {
   const [sending, setSending]             = useState(false);
   const [sent, setSent]                   = useState(false);
 
-  // Ref для отслеживания нажатой кнопки scale — НЕ стейт.
-  // Ref обновляется мгновенно без ре-рендера и не "застревает" между вопросами.
-  // При смене currentId сбрасываем ref в null — никакой подсветки на новом вопросе.
   const scaleClickedRef = useRef(null);
   const [scalePressedValue, setScalePressedValue] = useState(null);
 
-  // Сбрасываем визуальную подсветку при каждой смене вопроса
   useEffect(() => {
     scaleClickedRef.current = null;
     setScalePressedValue(null);
@@ -182,9 +178,6 @@ const SurveyEngine = ({ onClose }) => {
 
   const handleSingle = (value) => goNext({ [currentId]: value });
 
-  // handleScale: показываем подсветку через локальный стейт scalePressedValue,
-  // который сбрасывается useEffect при смене currentId.
-  // Переход происходит сразу — без цепочки setTimeout/rAF.
   const handleScale = (value) => {
     setScalePressedValue(value);
     goNext({ [currentId]: value });
@@ -313,9 +306,6 @@ const SurveyEngine = ({ onClose }) => {
         {question?.type === 'scale' && (
           <div className="flex flex-wrap gap-2 justify-center">
             {question.options.map(opt => {
-              // Подсветка только для только что нажатой кнопки на ТЕКУЩЕМ вопросе.
-              // scalePressedValue сбрасывается в null через useEffect([currentId]) —
-              // гарантирует что при открытии нового вопроса никакой кнопки не подсвечено.
               const isActive = !animating && scalePressedValue === opt.value;
               return (
                 <button key={opt.value} onClick={() => handleScale(opt.value)}
@@ -478,12 +468,7 @@ const BreathingTest = ({ surveyOpen, onSurveyToggle }) => {
               </div>
 
               <div className="flex items-center gap-2 text-gray-600 mt-4">
-                <div className="flex -space-x-2">
-                  {[1,2,3,4].map(i => (
-                    <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 border-2 border-white flex items-center justify-center text-white text-xs font-bold">{String.fromCharCode(64+i)}</div>
-                  ))}
-                </div>
-                <span className="text-sm"><strong>1200+</strong> человек уже прошли</span>
+                <span className="text-sm"><strong>200+</strong> человек уже прошли диагностику</span>
               </div>
             </div>
 
