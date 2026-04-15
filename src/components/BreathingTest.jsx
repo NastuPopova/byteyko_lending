@@ -47,7 +47,6 @@ const ContactScreen = ({ onNext, onClose }) => {
       </div>
 
       <div className="space-y-4">
-        {/* Имя */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1">
             Имя <span className="text-red-500">*</span>
@@ -67,7 +66,6 @@ const ContactScreen = ({ onNext, onClose }) => {
           {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
         </div>
 
-        {/* Email */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1">
             Email <span className="text-red-500">*</span>
@@ -88,7 +86,6 @@ const ContactScreen = ({ onNext, onClose }) => {
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
         </div>
 
-        {/* Телефон */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1">
             Телефон
@@ -121,17 +118,21 @@ const ContactScreen = ({ onNext, onClose }) => {
 
 // ──── Движок анкеты ───────────────────────────────────────────────────────────
 const SurveyEngine = ({ onClose }) => {
-  const [screen, setScreen]         = useState('contact');
-  const [contact, setContact]       = useState(null);
-  const [userData, setUserData]     = useState({});
-  const [currentId, setCurrentId]   = useState('age_group');
+  const [screen, setScreen]               = useState('contact');
+  const [contact, setContact]             = useState(null);
+  const [userData, setUserData]           = useState({});
+  const [currentId, setCurrentId]         = useState('age_group');
   const [multiSelected, setMultiSelected] = useState([]);
-  // FIX #2: отдельный стейт для подсветки scale-кнопок, сбрасывается при смене вопроса
-  const [scaleSelected, setScaleSelected] = useState(null);
-  const [animating, setAnimating]   = useState(false);
-  const [result, setResult]         = useState(null);
-  const [sending, setSending]       = useState(false);
-  const [sent, setSent]             = useState(false);
+  const [animating, setAnimating]         = useState(false);
+  const [result, setResult]               = useState(null);
+  const [sending, setSending]             = useState(false);
+  const [sent, setSent]                   = useState(false);
+
+  // scaleSelected хранится как { questionId, value } —
+  // подсветка показывается ТОЛЬКО если questionId совпадает с currentId.
+  // Это гарантирует что на новом вопросе подсветки нет, даже если
+  // промежуточный рендер успел показать старый currentId.
+  const [scaleSelected, setScaleSelected] = useState({ questionId: null, value: null });
 
   const total      = getTotalQuestions(userData);
   const currentIdx = getQuestionIndex(currentId, userData);
@@ -141,11 +142,6 @@ const SurveyEngine = ({ onClose }) => {
 
   const question = QUESTIONS[currentId];
 
-  // FIX #2: сбрасываем scaleSelected при каждой смене вопроса
-  useEffect(() => {
-    setScaleSelected(null);
-  }, [currentId]);
-
   const goNext = (newData) => {
     const updated = { ...userData, ...newData };
     setUserData(updated);
@@ -153,7 +149,8 @@ const SurveyEngine = ({ onClose }) => {
     setAnimating(true);
     setTimeout(() => {
       setMultiSelected([]);
-      setScaleSelected(null);
+      // сбрасываем scaleSelected с новым questionId — старая подсветка не покажется
+      setScaleSelected({ questionId: null, value: null });
       if (next) {
         setCurrentId(next);
       } else {
@@ -172,7 +169,7 @@ const SurveyEngine = ({ onClose }) => {
       setTimeout(() => {
         setCurrentId(prev);
         setMultiSelected(userData[prev] || []);
-        setScaleSelected(null);
+        setScaleSelected({ questionId: null, value: null });
         setAnimating(false);
       }, 200);
     } else {
@@ -180,12 +177,20 @@ const SurveyEngine = ({ onClose }) => {
     }
   };
 
-  const handleSingle      = (value) => goNext({ [currentId]: value });
-  // FIX #2: сначала визуально подсвечиваем, потом переходим
-  const handleScale       = (value) => {
-    setScaleSelected(value);
-    setTimeout(() => goNext({ [currentId]: value }), 150);
+  const handleSingle = (value) => goNext({ [currentId]: value });
+
+  // handleScale: запоминаем { questionId: currentId, value } — подсветка
+  // привязана к конкретному вопросу, а не просто к числу.
+  // Переход — сразу через goNext без дополнительного setTimeout.
+  const handleScale = (value) => {
+    const qId = currentId;
+    setScaleSelected({ questionId: qId, value });
+    // Небольшая пауза чтобы пользователь увидел подсветку, потом переход
+    requestAnimationFrame(() => {
+      setTimeout(() => goNext({ [qId]: value }), 120);
+    });
   };
+
   const handleMultiToggle = (value) => {
     setMultiSelected(prev => {
       if (prev.includes(value)) return prev.filter(v => v !== value);
@@ -212,12 +217,10 @@ const SurveyEngine = ({ onClose }) => {
     }
   };
 
-  // Контактная форма
   if (screen === 'contact') {
     return <ContactScreen onClose={onClose} onNext={(c) => { setContact(c); setScreen('survey'); }} />;
   }
 
-  // Экран результата
   if (screen === 'done' && result) {
     const colors = levelColors[result.level] || levelColors.mild;
     const score  = result.scores?.urgency ?? null;
@@ -271,7 +274,6 @@ const SurveyEngine = ({ onClose }) => {
           </p>
         </div>
 
-        {/* FIX #3: цена 1500 на отдельной строке */}
         <button
           onClick={handleBook}
           disabled={sending}
@@ -293,7 +295,6 @@ const SurveyEngine = ({ onClose }) => {
     );
   }
 
-  // Экран вопроса
   return (
     <ModalShell onClose={onClose} progress={progress} onBack={question?.allowBack ? goBack : null}>
       <div className={`transition-opacity duration-200 ${animating ? 'opacity-0' : 'opacity-100'}`}>
@@ -310,11 +311,14 @@ const SurveyEngine = ({ onClose }) => {
           </div>
         )}
 
-        {/* FIX #2: scale использует scaleSelected (не userData) для подсветки */}
         {question?.type === 'scale' && (
           <div className="flex flex-wrap gap-2 justify-center">
             {question.options.map(opt => {
-              const isActive = scaleSelected === opt.value;
+              // Подсветка только если questionId совпадает с currentId —
+              // исключает ложную подсветку при смене вопроса
+              const isActive =
+                scaleSelected.questionId === currentId &&
+                scaleSelected.value === opt.value;
               return (
                 <button key={opt.value} onClick={() => handleScale(opt.value)}
                   className={`w-12 h-12 rounded-full border-2 font-bold text-sm transition-all duration-150 active:scale-95 ${
@@ -355,9 +359,8 @@ const SurveyEngine = ({ onClose }) => {
   );
 };
 
-// ──── Оболочка модалки (mobile + desktop scroll lock) ─────────────────────────
+// ──── Оболочка модалки ────────────────────────────────────────────────────────
 const ModalShell = ({ children, onClose, progress, onBack }) => {
-  // FIX #1: блокируем скролл на ВСЕХ устройствах (мобильный + десктоп)
   useEffect(() => {
     const scrollY = window.scrollY;
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
@@ -366,7 +369,6 @@ const ModalShell = ({ children, onClose, progress, onBack }) => {
     document.body.style.top = `-${scrollY}px`;
     document.body.style.width = '100%';
     document.body.style.overflowY = 'scroll';
-    // Компенсируем смещение от исчезновения скроллбара на десктопе
     if (scrollbarWidth > 0) {
       document.body.style.paddingRight = `${scrollbarWidth}px`;
     }
@@ -420,8 +422,6 @@ const ModalShell = ({ children, onClose, progress, onBack }) => {
 };
 
 // ──── Основная секция ─────────────────────────────────────────────────────────
-// surveyOpen и onSurveyToggle приходят из App.jsx для синхронизации
-// скрытия floating-элементов (StickyCTA, ScrollToTop, PopupNotifications)
 const BreathingTest = ({ surveyOpen, onSurveyToggle }) => {
   const [currentScreen, setCurrentScreen] = useState(0);
 
