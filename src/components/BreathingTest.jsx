@@ -128,11 +128,17 @@ const SurveyEngine = ({ onClose }) => {
   const [sending, setSending]             = useState(false);
   const [sent, setSent]                   = useState(false);
 
-  // scaleSelected хранится как { questionId, value } —
-  // подсветка показывается ТОЛЬКО если questionId совпадает с currentId.
-  // Это гарантирует что на новом вопросе подсветки нет, даже если
-  // промежуточный рендер успел показать старый currentId.
-  const [scaleSelected, setScaleSelected] = useState({ questionId: null, value: null });
+  // Ref для отслеживания нажатой кнопки scale — НЕ стейт.
+  // Ref обновляется мгновенно без ре-рендера и не "застревает" между вопросами.
+  // При смене currentId сбрасываем ref в null — никакой подсветки на новом вопросе.
+  const scaleClickedRef = useRef(null);
+  const [scalePressedValue, setScalePressedValue] = useState(null);
+
+  // Сбрасываем визуальную подсветку при каждой смене вопроса
+  useEffect(() => {
+    scaleClickedRef.current = null;
+    setScalePressedValue(null);
+  }, [currentId]);
 
   const total      = getTotalQuestions(userData);
   const currentIdx = getQuestionIndex(currentId, userData);
@@ -149,8 +155,6 @@ const SurveyEngine = ({ onClose }) => {
     setAnimating(true);
     setTimeout(() => {
       setMultiSelected([]);
-      // сбрасываем scaleSelected с новым questionId — старая подсветка не покажется
-      setScaleSelected({ questionId: null, value: null });
       if (next) {
         setCurrentId(next);
       } else {
@@ -169,7 +173,6 @@ const SurveyEngine = ({ onClose }) => {
       setTimeout(() => {
         setCurrentId(prev);
         setMultiSelected(userData[prev] || []);
-        setScaleSelected({ questionId: null, value: null });
         setAnimating(false);
       }, 200);
     } else {
@@ -179,16 +182,12 @@ const SurveyEngine = ({ onClose }) => {
 
   const handleSingle = (value) => goNext({ [currentId]: value });
 
-  // handleScale: запоминаем { questionId: currentId, value } — подсветка
-  // привязана к конкретному вопросу, а не просто к числу.
-  // Переход — сразу через goNext без дополнительного setTimeout.
+  // handleScale: показываем подсветку через локальный стейт scalePressedValue,
+  // который сбрасывается useEffect при смене currentId.
+  // Переход происходит сразу — без цепочки setTimeout/rAF.
   const handleScale = (value) => {
-    const qId = currentId;
-    setScaleSelected({ questionId: qId, value });
-    // Небольшая пауза чтобы пользователь увидел подсветку, потом переход
-    requestAnimationFrame(() => {
-      setTimeout(() => goNext({ [qId]: value }), 120);
-    });
+    setScalePressedValue(value);
+    goNext({ [currentId]: value });
   };
 
   const handleMultiToggle = (value) => {
@@ -314,11 +313,10 @@ const SurveyEngine = ({ onClose }) => {
         {question?.type === 'scale' && (
           <div className="flex flex-wrap gap-2 justify-center">
             {question.options.map(opt => {
-              // Подсветка только если questionId совпадает с currentId —
-              // исключает ложную подсветку при смене вопроса
-              const isActive =
-                scaleSelected.questionId === currentId &&
-                scaleSelected.value === opt.value;
+              // Подсветка только для только что нажатой кнопки на ТЕКУЩЕМ вопросе.
+              // scalePressedValue сбрасывается в null через useEffect([currentId]) —
+              // гарантирует что при открытии нового вопроса никакой кнопки не подсвечено.
+              const isActive = !animating && scalePressedValue === opt.value;
               return (
                 <button key={opt.value} onClick={() => handleScale(opt.value)}
                   className={`w-12 h-12 rounded-full border-2 font-bold text-sm transition-all duration-150 active:scale-95 ${
