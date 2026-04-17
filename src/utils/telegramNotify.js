@@ -1,8 +1,4 @@
-const BOT_URL = 'https://breathing-lead-bot.bothost.ru';
-
-// Fallback: прямой Telegram если bothost недоступен
-const BOT_TOKEN = '7416243262:AAE8mDCuV2o9FtYE_iO8sVsn8Sg-db3CfaM';
-const CHAT_ID   = '981828628';
+const BOT_URL = '/api/notify-lead';
 
 // ── Метки полей ───────────────────────────────────────────────────────────────
 const QUESTION_LABELS = {
@@ -22,7 +18,6 @@ const QUESTION_LABELS = {
   format_preferences:       'Удобные форматы',
   main_goals:               'Главные цели',
   chronic_conditions:       'Хронические заболевания',
-  // Детский поток
   child_age_detail:         'Возраст ребёнка',
   child_problems_detailed:  'Проблемы ребёнка',
   child_motivation_approach:'Мотивация ребёнка',
@@ -136,20 +131,6 @@ function translateValue(val) {
   return VALUE_LABELS[val] || val;
 }
 
-function formatAnswers(userData) {
-  return Object.entries(QUESTION_LABELS)
-    .filter(([key]) => userData[key] !== undefined && userData[key] !== null && userData[key] !== '')
-    .map(([key, label]) => {
-      const raw = userData[key];
-      if (Array.isArray(raw) && raw.length === 0) return null;
-      const value = esc(translateValue(raw));
-      const isScale = key === 'stress_level' || key === 'sleep_quality';
-      return `• <b>${esc(label)}:</b> ${value}${isScale ? '/10' : ''}`;
-    })
-    .filter(Boolean)
-    .join('\n');
-}
-
 function fetchWithTimeout(url, options, ms = 8000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ms);
@@ -157,8 +138,8 @@ function fetchWithTimeout(url, options, ms = 8000) {
     .finally(() => clearTimeout(timer));
 }
 
-// ── Отправка через bothost ─────────────────────────────────────────────────────
-async function sendViaBothost({ contact, userData, result }) {
+// ── Экспорт ───────────────────────────────────────────────────────────────────
+export async function sendLeadToTelegram({ contact, userData, result }) {
   const payload = {
     name:    contact.name,
     email:   contact.email  || '',
@@ -171,104 +152,49 @@ async function sendViaBothost({ contact, userData, result }) {
     occupation:           userData.occupation           || '',
     physical_activity:    userData.physical_activity    || '',
     current_problems:     Array.isArray(userData.current_problems)
-                            ? userData.current_problems.join(', ')
-                            : (userData.current_problems || ''),
+                            ? userData.current_problems.map(v => VALUE_LABELS[v] || v).join(', ')
+                            : (VALUE_LABELS[userData.current_problems] || userData.current_problems || ''),
     stress_level:         userData.stress_level         ?? '',
     sleep_quality:        userData.sleep_quality        ?? '',
-    priority_problem:     userData.priority_problem     || '',
-    breathing_method:     userData.breathing_method     || '',
-    breathing_frequency:  userData.breathing_frequency  || '',
-    shallow_breathing:    userData.shallow_breathing    || '',
-    stress_breathing:     userData.stress_breathing     || '',
-    breathing_experience: userData.breathing_experience || '',
-    time_commitment:      userData.time_commitment      || '',
+    priority_problem:     VALUE_LABELS[userData.priority_problem] || userData.priority_problem || '',
+    breathing_method:     VALUE_LABELS[userData.breathing_method] || userData.breathing_method || '',
+    breathing_frequency:  VALUE_LABELS[userData.breathing_frequency] || userData.breathing_frequency || '',
+    shallow_breathing:    VALUE_LABELS[userData.shallow_breathing] || userData.shallow_breathing || '',
+    stress_breathing:     VALUE_LABELS[userData.stress_breathing] || userData.stress_breathing || '',
+    breathing_experience: VALUE_LABELS[userData.breathing_experience] || userData.breathing_experience || '',
+    time_commitment:      VALUE_LABELS[userData.time_commitment] || userData.time_commitment || '',
     format_preferences:   Array.isArray(userData.format_preferences)
-                            ? userData.format_preferences.join(', ')
-                            : (userData.format_preferences || ''),
+                            ? userData.format_preferences.map(v => VALUE_LABELS[v] || v).join(', ')
+                            : (VALUE_LABELS[userData.format_preferences] || userData.format_preferences || ''),
     main_goals:           Array.isArray(userData.main_goals)
-                            ? userData.main_goals.join(', ')
-                            : (userData.main_goals || ''),
+                            ? userData.main_goals.map(v => VALUE_LABELS[v] || v).join(', ')
+                            : (VALUE_LABELS[userData.main_goals] || userData.main_goals || ''),
     chronic_conditions:   Array.isArray(userData.chronic_conditions)
-                            ? userData.chronic_conditions.join(', ')
-                            : (userData.chronic_conditions || ''),
+                            ? userData.chronic_conditions.map(v => VALUE_LABELS[v] || v).join(', ')
+                            : (VALUE_LABELS[userData.chronic_conditions] || userData.chronic_conditions || ''),
     child_age_detail:          userData.child_age_detail          || '',
     child_problems_detailed:   Array.isArray(userData.child_problems_detailed)
-                                 ? userData.child_problems_detailed.join(', ')
-                                 : (userData.child_problems_detailed || ''),
-    child_motivation_approach: userData.child_motivation_approach || '',
+                                 ? userData.child_problems_detailed.map(v => VALUE_LABELS[v] || v).join(', ')
+                                 : (VALUE_LABELS[userData.child_problems_detailed] || userData.child_problems_detailed || ''),
+    child_motivation_approach: VALUE_LABELS[userData.child_motivation_approach] || userData.child_motivation_approach || '',
   };
 
-  const resp = await fetchWithTimeout(
-    `${BOT_URL}/notify-lead`,
-    {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(payload),
-    },
-    8000
-  );
-
-  if (!resp.ok) throw new Error(`bothost ответил ${resp.status}`);
-  return true;
-}
-
-// ── Fallback: прямой Telegram (HTML — без Markdown-рисков) ────────────────────
-async function sendViaTelegramDirect({ contact, userData, result }) {
-  const answers = formatAnswers(userData);
-
-  const levelEmoji = { good: '🟢', mild: '🟡', moderate: '🟠', severe: '🔴' }[result?.level] || '⚪';
-  const isChild = userData.age_group === 'for_child';
-
-  const lines = [
-    `🔔 <b>Новая запись (лендинг)${isChild ? ' — РЕБЁНОК' : ''}!</b>`,
-    '',
-    `👤 <b>${esc(contact.name)}</b>`,
-    contact.email ? `📧 ${esc(contact.email)}` : '',
-    contact.phone ? `📞 ${esc(contact.phone)}` : '',
-    '',
-    `${levelEmoji} <b>Результат:</b> ${esc(result?.title || '—')} — ${result?.scores?.urgency ?? '?'}/100`,
-    `🎯 <b>Сегмент:</b> ${esc(result?.segment || '—')}`,
-    '',
-    '📝 <b>Ответы на анкету:</b>',
-    answers || '(нет данных)',
-    '',
-    `⏰ ${new Date().toLocaleString('ru-RU', { timeZone: 'Asia/Yekaterinburg' })}`,
-  ];
-
-  const text = lines.filter(l => l !== null && l !== undefined).join('\n');
-
-  const resp = await fetchWithTimeout(
-    `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
-    {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ chat_id: CHAT_ID, text, parse_mode: 'HTML' }),
-    },
-    8000
-  );
-
-  if (!resp.ok) {
-    const errData = await resp.json().catch(() => ({}));
-    console.error('❌ Telegram API error:', errData);
-    return false;
-  }
-  return true;
-}
-
-// ── Экспорт ───────────────────────────────────────────────────────────────────
-export async function sendLeadToTelegram({ contact, userData, result }) {
   try {
-    await sendViaBothost({ contact, userData, result });
-    console.log('✅ Лид отправлен через bothost');
+    const resp = await fetchWithTimeout(
+      BOT_URL,
+      {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+      },
+      8000
+    );
+
+    if (!resp.ok) throw new Error(`Netlify function ответила ${resp.status}`);
+    console.log('✅ Лид отправлен через Netlify Function');
     return true;
   } catch (err) {
-    console.warn('⚠️ bothost недоступен, fallback на Telegram API:', err.message);
-    const ok = await sendViaTelegramDirect({ contact, userData, result });
-    if (ok) {
-      console.log('✅ Лид отправлен через Telegram API (fallback)');
-    } else {
-      console.error('❌ Не удалось отправить лид ни одним способом');
-    }
-    return ok;
+    console.error('❌ Не удалось отправить лид:', err.message);
+    return false;
   }
 }
