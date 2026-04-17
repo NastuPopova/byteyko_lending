@@ -30,14 +30,11 @@ const QUESTION_LABELS = {
 
 // ── Переводы значений ─────────────────────────────────────────────────────────
 const VALUE_LABELS = {
-  // Возраст
   '18-30':          '18–30 лет',
   '31-45':          '31–45 лет',
   '46-60':          '46–60 лет',
   '60+':            '60+ лет',
   'for_child':      'Заполняю для ребёнка',
-
-  // Деятельность
   'office_work':    'Офисная работа',
   'home_work':      'Работа дома / фриланс',
   'physical_work':  'Физический труд',
@@ -45,15 +42,11 @@ const VALUE_LABELS = {
   'maternity_leave':'В декрете',
   'retired':        'На пенсии',
   'management':     'Руководящая должность',
-
-  // Физическая активность
   'daily':          'Ежедневно',
   'regular':        '3–4 раза в неделю',
   'sometimes':      'Иногда / несколько раз в месяц',
   'rarely':         'Несколько раз в месяц',
   'never':          'Практически не занимаюсь',
-
-  // Проблемы / приоритет
   'chronic_stress':       'Хронический стресс, напряжение',
   'insomnia':             'Плохой сон, бессонница',
   'breathing_issues':     'Одышка, нехватка воздуха',
@@ -64,53 +57,34 @@ const VALUE_LABELS = {
   'concentration_issues': 'Проблемы с концентрацией',
   'back_pain':            'Боли в шее, плечах, спине',
   'digestion_issues':     'Проблемы с пищеварением',
-
-  // Тип дыхания
   'nose':     'В основном носом',
   'mouth':    'Часто дышу ртом',
   'mixed':    'Попеременно носом и ртом',
   'unaware':  'Не обращаю внимания',
-
-  // Частота проблем
   'constantly': 'Постоянно (каждый день)',
   'often':      'Часто (несколько раз в неделю)',
-  // 'sometimes' уже есть выше
-  // 'rarely' уже есть выше
-  // 'never' уже есть выше
-
-  // Поверхностное дыхание
   'yes_often':  'Да, часто ловлю себя на этом',
   'no':         'Нет, дышу нормально и глубоко',
-
-  // Дыхание при стрессе
   'rapid_shallow':      'Учащается, становится поверхностным',
   'breath_holding':     'Начинаю задерживать дыхание',
   'air_shortage':       'Чувствую нехватку воздуха',
   'mouth_breathing':    'Дышу ртом вместо носа',
   'no_change':          'Не замечаю изменений',
   'conscious_breathing':'Стараюсь дышать глубже',
-
-  // Опыт практик
   'few_times':    'Пробовал(а) пару раз, не пошло',
   'theory_only':  'Изучал(а) теорию, но не практиковал(а)',
   'regularly':    'Практикую регулярно (несколько раз в неделю)',
   'expert':       'Опытный практик (ежедневно)',
-
-  // Время
   '3-5_minutes':   '3–5 минут',
   '10-15_minutes': '10–15 минут',
   '20-30_minutes': '20–30 минут',
   '30+_minutes':   '30+ минут',
-
-  // Форматы
   'video':       'Видеоуроки с демонстрацией',
   'audio':       'Аудиопрактики с голосом',
   'text':        'Текст с картинками',
   'online_live': 'Живые онлайн-занятия',
   'individual':  'Индивидуальные консультации',
   'mobile_app':  'Мобильное приложение',
-
-  // Цели
   'quick_relaxation':   'Быстро расслабляться в стрессе',
   'stress_resistance':  'Повысить стрессоустойчивость',
   'reduce_anxiety':     'Избавиться от тревожности и паники',
@@ -121,8 +95,6 @@ const VALUE_LABELS = {
   'improve_focus':      'Улучшить концентрацию внимания',
   'weight_management':  'Поддержать процесс похудения',
   'general_health':     'Общее оздоровление организма',
-
-  // Хронические заболевания
   'respiratory_diseases':   'Астма / бронхит / ХОБЛ',
   'cardiovascular_diseases':'Гипертония / аритмия',
   'diabetes':               'Диабет 1 или 2 типа',
@@ -132,8 +104,6 @@ const VALUE_LABELS = {
   'thyroid_diseases':       'Заболевания щитовидной железы',
   'digestive_diseases':     'Гастрит / язва / рефлюкс',
   'none':                   'Нет хронических заболеваний',
-
-  // Детский поток
   '3-4':  '3–4 года',
   '5-6':  '5–6 лет',
   '7-8':  '7–8 лет',
@@ -141,14 +111,12 @@ const VALUE_LABELS = {
   '11-12':'11–12 лет',
   '13-15':'13–15 лет',
   '16-17':'16–17 лет',
-
   'tantrums':         'Частые истерики, капризы',
   'sleep_problems':   'Проблемы с засыпанием',
   'nightmares':       'Беспокойный сон, кошмары',
   'hyperactivity':    'Гиперактивность',
   'weak_immunity':    'Частые простуды, слабый иммунитет',
   'prevention':       'В целом здоров, профилактика',
-
   'games_stories':      'Игровая форма, сказки',
   'reward_system':      'Система наград и достижений',
   'family_activities':  'Совместные занятия с родителями',
@@ -158,10 +126,12 @@ const VALUE_LABELS = {
 
 // ── Вспомогательные функции ───────────────────────────────────────────────────
 
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 function translateValue(val) {
-  if (Array.isArray(val)) {
-    return val.map(v => VALUE_LABELS[v] || v).join(', ');
-  }
+  if (Array.isArray(val)) return val.map(v => VALUE_LABELS[v] || v).join(', ');
   if (typeof val === 'number') return String(val);
   return VALUE_LABELS[val] || val;
 }
@@ -171,12 +141,10 @@ function formatAnswers(userData) {
     .filter(([key]) => userData[key] !== undefined && userData[key] !== null && userData[key] !== '')
     .map(([key, label]) => {
       const raw = userData[key];
-      // Пропускаем пустые массивы
       if (Array.isArray(raw) && raw.length === 0) return null;
-      const value = translateValue(raw);
-      // Шкальные вопросы — добавляем /10
+      const value = esc(translateValue(raw));
       const isScale = key === 'stress_level' || key === 'sleep_quality';
-      return `• *${label}:* ${value}${isScale ? '/10' : ''}`;
+      return `• <b>${esc(label)}:</b> ${value}${isScale ? '/10' : ''}`;
     })
     .filter(Boolean)
     .join('\n');
@@ -199,7 +167,6 @@ async function sendViaBothost({ contact, userData, result }) {
     score:   result?.scores?.urgency ?? 0,
     profile: result?.title  || '',
     tech:    result?.technique || '',
-    // Все поля анкеты сырыми значениями для аналитики
     age_group:            userData.age_group            || '',
     occupation:           userData.occupation           || '',
     physical_activity:    userData.physical_activity    || '',
@@ -224,7 +191,6 @@ async function sendViaBothost({ contact, userData, result }) {
     chronic_conditions:   Array.isArray(userData.chronic_conditions)
                             ? userData.chronic_conditions.join(', ')
                             : (userData.chronic_conditions || ''),
-    // Детский поток
     child_age_detail:          userData.child_age_detail          || '',
     child_problems_detailed:   Array.isArray(userData.child_problems_detailed)
                                  ? userData.child_problems_detailed.join(', ')
@@ -246,50 +212,63 @@ async function sendViaBothost({ contact, userData, result }) {
   return true;
 }
 
-// ── Fallback: прямой Telegram ──────────────────────────────────────────────────
+// ── Fallback: прямой Telegram (HTML — без Markdown-рисков) ────────────────────
 async function sendViaTelegramDirect({ contact, userData, result }) {
   const answers = formatAnswers(userData);
 
   const levelEmoji = { good: '🟢', mild: '🟡', moderate: '🟠', severe: '🔴' }[result?.level] || '⚪';
   const isChild = userData.age_group === 'for_child';
 
-  const text = [
-    `🔔 *Новая запись (лендинг)${isChild ? ' — РЕБЁНОК' : ''}!*`,
+  const lines = [
+    `🔔 <b>Новая запись (лендинг)${isChild ? ' — РЕБЁНОК' : ''}!</b>`,
     '',
-    `👤 *${contact.name}*`,
-    contact.email ? `📧 ${contact.email}` : '',
-    contact.phone ? `📞 ${contact.phone}` : '',
+    `👤 <b>${esc(contact.name)}</b>`,
+    contact.email ? `📧 ${esc(contact.email)}` : '',
+    contact.phone ? `📞 ${esc(contact.phone)}` : '',
     '',
-    `${levelEmoji} *Результат:* ${result?.title || '—'} — ${result?.scores?.urgency ?? '?'}/100`,
-    `🎯 *Сегмент:* ${result?.segment || '—'}`,
+    `${levelEmoji} <b>Результат:</b> ${esc(result?.title || '—')} — ${result?.scores?.urgency ?? '?'}/100`,
+    `🎯 <b>Сегмент:</b> ${esc(result?.segment || '—')}`,
     '',
-    '📝 *Ответы на анкету:*',
-    answers,
+    '📝 <b>Ответы на анкету:</b>',
+    answers || '(нет данных)',
     '',
     `⏰ ${new Date().toLocaleString('ru-RU', { timeZone: 'Asia/Yekaterinburg' })}`,
-  ].filter(Boolean).join('\n');
+  ];
+
+  const text = lines.filter(l => l !== null && l !== undefined).join('\n');
 
   const resp = await fetchWithTimeout(
     `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
     {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ chat_id: CHAT_ID, text, parse_mode: 'Markdown' }),
+      body:    JSON.stringify({ chat_id: CHAT_ID, text, parse_mode: 'HTML' }),
     },
     8000
   );
 
-  return resp.ok;
+  if (!resp.ok) {
+    const errData = await resp.json().catch(() => ({}));
+    console.error('❌ Telegram API error:', errData);
+    return false;
+  }
+  return true;
 }
 
 // ── Экспорт ───────────────────────────────────────────────────────────────────
 export async function sendLeadToTelegram({ contact, userData, result }) {
   try {
     await sendViaBothost({ contact, userData, result });
-    console.log('✅ Лид отправлен через bothost (статистика)');
+    console.log('✅ Лид отправлен через bothost');
     return true;
   } catch (err) {
-    console.warn('⚠️ bothost недоступен, fallback:', err.message);
-    return sendViaTelegramDirect({ contact, userData, result });
+    console.warn('⚠️ bothost недоступен, fallback на Telegram API:', err.message);
+    const ok = await sendViaTelegramDirect({ contact, userData, result });
+    if (ok) {
+      console.log('✅ Лид отправлен через Telegram API (fallback)');
+    } else {
+      console.error('❌ Не удалось отправить лид ни одним способом');
+    }
+    return ok;
   }
 }
