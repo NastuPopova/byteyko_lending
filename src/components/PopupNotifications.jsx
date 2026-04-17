@@ -3,14 +3,14 @@ import {
   Users,
   TrendingUp,
   BookOpen,
-  Clock,
   Heart,
   Brain,
   Moon,
-  Battery,
   Info,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Calendar,
+  Zap,
 } from 'lucide-react';
 import SidebarNotificationsMenu from './SidebarNotificationsMenu';
 
@@ -28,25 +28,31 @@ const notificationTypes = {
 };
 
 const notificationTemplates = [
-  { icon: <Users className="text-blue-500" />,   template: 'NAME начал(а) курс дыхательных практик',                    type: 'info'    },
-  { icon: <TrendingUp className="text-emerald-500" />, template: 'NAME улучшил(а) качество сна на PERCENT%',             type: 'success' },
-  { icon: <Heart className="text-emerald-500" />, template: 'NAME отметил(а) снижение тревожности на PERCENT%',       type: 'success' },
-  { icon: <Brain className="text-blue-500" />,    template: 'NAME освоил(а) технику диафрагмального дыхания',    type: 'info'    },
-  { icon: <Moon className="text-emerald-500" />,  template: 'NAME улучшил(а) качество засыпания на PERCENT%',         type: 'success' },
-  { icon: <Battery className="text-amber-500" />, template: 'NAME отмечает повышение энергии на PERCENT%',           type: 'warning' },
-  { icon: <BookOpen className="text-blue-500" />, template: 'NAME приступил(а) к изучению продвинутых техник', type: 'info'    },
+  // Пробное занятие
+  { icon: <Calendar className="text-blue-500" />,       template: 'NAME записался(лась) на пробное занятие',                            type: 'info'    },
+  { icon: <CheckCircle className="text-emerald-500" />, template: 'NAME прошёл(а) первое занятие — КП выросла с 10 до 18 сек',          type: 'success' },
+  // Недельный интенсив
+  { icon: <Zap className="text-amber-500" />,           template: 'NAME начал(а) недельный интенсив по методу Бутейко',                 type: 'info'    },
+  { icon: <TrendingUp className="text-emerald-500" />,  template: 'NAME завершил(а) недельный интенсив — КП выросла в 2 раза',          type: 'success' },
+  // Курс 5 занятий
+  { icon: <BookOpen className="text-blue-500" />,       template: 'NAME записался(лась) на курс 5 занятий',                             type: 'info'    },
+  { icon: <Heart className="text-emerald-500" />,       template: 'NAME прошёл(а) 3 занятия курса — ушла одышка при ходьбе',            type: 'success' },
+  { icon: <Moon className="text-blue-500" />,           template: 'NAME: «После 2-й недели курса перестал(а) просыпаться ночью»',       type: 'info'    },
+  // Нейтральные / вовлекающие
+  { icon: <Users className="text-blue-500" />,          template: 'NAME прошёл(а) бесплатный тест дыхания',                             type: 'info'    },
+  { icon: <Brain className="text-blue-500" />,          template: 'NAME освоил(а) технику носового дыхания на занятии',                 type: 'info'    },
+  { icon: <CheckCircle className="text-emerald-500" />, template: 'NAME: «КП 15 сек → 32 сек за месяц занятий»',                       type: 'success' },
 ];
 
-const NOTIFICATION_DURATION = 5000;
+const NOTIFICATION_DURATION = 7000;
 
 const generateNotification = () => {
   const template = notificationTemplates[Math.floor(Math.random() * notificationTemplates.length)];
   const name    = names[Math.floor(Math.random() * names.length)];
-  const percent = Math.floor(Math.random() * 30) + 40;
   return {
     id: Date.now() + Math.random(),
     icon: template.icon,
-    text: template.template.replace('NAME', name).replace('PERCENT', percent),
+    text: template.template.replace('NAME', name),
     time: 'только что',
     type: template.type,
     createdAt: Date.now(),
@@ -95,7 +101,7 @@ const PopupNotifications = ({ hidden = false }) => {
   const [notificationSettings, setNotificationSettings] = useState({
     browserNotifications: true,
     soundNotifications: false,
-    maxNotificationsPerDay: 3,
+    maxNotificationsPerDay: 6,
   });
   const [notificationsToday, setNotificationsToday] = useState(0);
 
@@ -125,9 +131,9 @@ const PopupNotifications = ({ hidden = false }) => {
 
   useEffect(() => {
     if (notificationsToday < notificationSettings.maxNotificationsPerDay) {
-      const t = setTimeout(addNotification, 10000);
+      const t = setTimeout(addNotification, 28000);
       const i = setInterval(() => {
-        setTimeout(addNotification, Math.floor(Math.random() * 20000) + 40000);
+        setTimeout(addNotification, Math.floor(Math.random() * 30000) + 90000);
       }, 60000);
       return () => { clearTimeout(t); clearInterval(i); };
     }
