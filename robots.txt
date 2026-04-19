@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://вашдомен.ru/sitemap.xml 
+Sitemap: https://dyhanie-buteiko72.ru/sitemap.xml
