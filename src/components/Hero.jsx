@@ -36,7 +36,7 @@ const Hero = () => {
           isLoaded ? 'opacity-85 scale-100 blur-0' : 'opacity-0 scale-105 blur-sm'
         }`}
         style={{
-          backgroundImage: `url("${process.env.PUBLIC_URL}/hero.png")`,
+          backgroundImage: `url("${process.env.PUBLIC_URL}/hero.webp")`,
           filter: 'brightness(0.9)',
           backgroundPosition: 'center 20%'
         }}
