@@ -121,14 +121,18 @@ const VALUE_LABELS = {
 
 // ── Вспомогательные функции ───────────────────────────────────────────────────
 
-function esc(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
 function translateValue(val) {
   if (Array.isArray(val)) return val.map(v => VALUE_LABELS[v] || v).join(', ');
   if (typeof val === 'number') return String(val);
   return VALUE_LABELS[val] || val;
+}
+
+// Форматирует числовое значение шкалы в "05/10"
+function formatScale(value) {
+  if (value === null || value === undefined || value === '') return '';
+  const num = Number(value);
+  if (isNaN(num)) return String(value);
+  return `${String(num).padStart(2, '0')}/10`;
 }
 
 function fetchWithTimeout(url, options, ms = 8000) {
@@ -148,14 +152,25 @@ export async function sendLeadToTelegram({ contact, userData, result }) {
     score:   result?.scores?.urgency ?? 0,
     profile: result?.title  || '',
     tech:    result?.technique || '',
-    age_group:            userData.age_group            || '',
-    occupation:           userData.occupation           || '',
-    physical_activity:    userData.physical_activity    || '',
+
+    // Переводим age_group и occupation через VALUE_LABELS
+    age_group:            VALUE_LABELS[userData.age_group] || userData.age_group || '',
+    occupation:           VALUE_LABELS[userData.occupation] || userData.occupation || '',
+    physical_activity:    VALUE_LABELS[userData.physical_activity] || userData.physical_activity || '',
+
     current_problems:     Array.isArray(userData.current_problems)
                             ? userData.current_problems.map(v => VALUE_LABELS[v] || v).join(', ')
                             : (VALUE_LABELS[userData.current_problems] || userData.current_problems || ''),
-    stress_level:         userData.stress_level         ?? '',
-    sleep_quality:        userData.sleep_quality        ?? '',
+
+    // ИСПРАВЛЕНО: number-поля — используем !== undefined, чтобы 0 не потерялся
+    // Форматируем сразу в "05/10" для единообразия
+    stress_level:         userData.stress_level !== undefined && userData.stress_level !== null
+                            ? formatScale(userData.stress_level)
+                            : '',
+    sleep_quality:        userData.sleep_quality !== undefined && userData.sleep_quality !== null
+                            ? formatScale(userData.sleep_quality)
+                            : '',
+
     priority_problem:     VALUE_LABELS[userData.priority_problem] || userData.priority_problem || '',
     breathing_method:     VALUE_LABELS[userData.breathing_method] || userData.breathing_method || '',
     breathing_frequency:  VALUE_LABELS[userData.breathing_frequency] || userData.breathing_frequency || '',
@@ -163,16 +178,20 @@ export async function sendLeadToTelegram({ contact, userData, result }) {
     stress_breathing:     VALUE_LABELS[userData.stress_breathing] || userData.stress_breathing || '',
     breathing_experience: VALUE_LABELS[userData.breathing_experience] || userData.breathing_experience || '',
     time_commitment:      VALUE_LABELS[userData.time_commitment] || userData.time_commitment || '',
+
     format_preferences:   Array.isArray(userData.format_preferences)
                             ? userData.format_preferences.map(v => VALUE_LABELS[v] || v).join(', ')
                             : (VALUE_LABELS[userData.format_preferences] || userData.format_preferences || ''),
+
     main_goals:           Array.isArray(userData.main_goals)
                             ? userData.main_goals.map(v => VALUE_LABELS[v] || v).join(', ')
                             : (VALUE_LABELS[userData.main_goals] || userData.main_goals || ''),
+
     chronic_conditions:   Array.isArray(userData.chronic_conditions)
                             ? userData.chronic_conditions.map(v => VALUE_LABELS[v] || v).join(', ')
                             : (VALUE_LABELS[userData.chronic_conditions] || userData.chronic_conditions || ''),
-    child_age_detail:          userData.child_age_detail          || '',
+
+    child_age_detail:          VALUE_LABELS[userData.child_age_detail] || userData.child_age_detail || '',
     child_problems_detailed:   Array.isArray(userData.child_problems_detailed)
                                  ? userData.child_problems_detailed.map(v => VALUE_LABELS[v] || v).join(', ')
                                  : (VALUE_LABELS[userData.child_problems_detailed] || userData.child_problems_detailed || ''),
