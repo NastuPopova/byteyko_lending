@@ -36,6 +36,87 @@
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
+    <!-- ─── Schema.org — LocalBusiness ──────────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "Дыхательная гимнастика Бутейко",
+      "description": "Сертифицированный методист по методу Бутейко. Онлайн-курсы и консультации. Помогаю при астме, аллергии, тревожности, бессоннице и высоком давлении.",
+      "url": "https://dyhanie-buteiko72.ru/",
+      "image": "https://dyhanie-buteiko72.ru/og-image.jpg",
+      "telephone": "",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Тюмень",
+        "addressRegion": "Тюменская область",
+        "addressCountry": "RU"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 57.1522,
+        "longitude": 65.5272
+      },
+      "openingHours": "Mo-Su 09:00-21:00",
+      "priceRange": "₽₽",
+      "sameAs": []
+    }
+    </script>
+
+    <!-- ─── Schema.org — Person (инструктор) ────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Александр Попов",
+      "jobTitle": "Инструктор по дыхательной гимнастике Бутейко",
+      "description": "Сертифицированный методист по методике Бутейко. Провожу онлайн-диагностику дыхания и обучение дыхательной гимнастике.",
+      "url": "https://dyhanie-buteiko72.ru/#about-me",
+      "image": "https://dyhanie-buteiko72.ru/og-image.jpg",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Тюмень",
+        "addressCountry": "RU"
+      },
+      "knowsAbout": [
+        "Метод Бутейко",
+        "Дыхательная гимнастика",
+        "Лечение астмы",
+        "Аллергия",
+        "Тревожность",
+        "Бессонница"
+      ]
+    }
+    </script>
+
+    <!-- ─── Schema.org — Course (курс) ──────────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Course",
+      "name": "Онлайн-курс дыхательной гимнастики по методу Бутейко",
+      "description": "Практический курс дыхательной гимнастики по методу Бутейко. Помогает при астме, аллергии, тревожности, бессоннице и высоком давлении. Онлайн-формат, доступ из любой точки России.",
+      "url": "https://dyhanie-buteiko72.ru/#products",
+      "image": "https://dyhanie-buteiko72.ru/og-image.jpg",
+      "provider": {
+        "@type": "Person",
+        "name": "Александр Попов",
+        "url": "https://dyhanie-buteiko72.ru/#about-me"
+      },
+      "inLanguage": "ru",
+      "educationalLevel": "Beginner",
+      "courseMode": "online",
+      "availableLanguage": "Russian",
+      "offers": {
+        "@type": "Offer",
+        "category": "Paid",
+        "priceCurrency": "RUB",
+        "availability": "https://schema.org/InStock",
+        "url": "https://dyhanie-buteiko72.ru/#products"
+      }
+    }
+    </script>
+
     <!-- ─── Yandex.Metrika counter ──────────────────────────────── -->
     <script type="text/javascript">
       (function(m,e,t,r,i,k,a){
