@@ -17,6 +17,34 @@ const levelColors = {
   severe:   { bg: 'from-red-50 to-rose-50',     bar: 'bg-red-400',     border: 'border-red-200' },
 };
 
+// ──── Диалог подтверждения закрытия ──────────────────────────────────────────
+const CloseConfirmDialog = ({ onStay, onExit }) => (
+  <div
+    className="absolute inset-0 z-10 flex items-center justify-center rounded-t-2xl sm:rounded-2xl"
+    style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }}
+  >
+    <div className="bg-white rounded-2xl shadow-2xl mx-4 p-6 max-w-sm w-full text-center">
+      <div className="text-3xl mb-3">🤔</div>
+      <h3 className="text-lg font-bold text-gray-900 mb-2">Уверены, что хотите закрыть?</h3>
+      <p className="text-gray-500 text-sm mb-5">Прогресс будет потерян</p>
+      <div className="flex gap-3">
+        <button
+          onClick={onStay}
+          className="flex-1 py-3 rounded-xl border-2 border-teal-500 text-teal-600 font-bold text-sm hover:bg-teal-50 transition-colors"
+        >
+          Остаться
+        </button>
+        <button
+          onClick={onExit}
+          className="flex-1 py-3 rounded-xl bg-gray-100 text-gray-700 font-bold text-sm hover:bg-gray-200 transition-colors"
+        >
+          Выйти
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 // ──── Контактная форма ────────────────────────────────────────────────────────
 const ContactScreen = ({ onNext, onClose }) => {
   const [name, setName]   = useState('');
@@ -39,7 +67,7 @@ const ContactScreen = ({ onNext, onClose }) => {
   };
 
   return (
-    <ModalShell onClose={onClose} progress={0}>
+    <ModalShell onClose={onClose} progress={0} isDone={false}>
       <div className="text-center mb-5">
         <div className="text-4xl mb-2">🫁</div>
         <h3 className="text-xl font-bold text-gray-900 mb-1">Бесплатная диагностика дыхания</h3>
@@ -209,6 +237,8 @@ const SurveyEngine = ({ onClose }) => {
     }
   };
 
+  const isDone = screen === 'done';
+
   if (screen === 'contact') {
     return <ContactScreen onClose={onClose} onNext={(c) => { setContact(c); setScreen('survey'); }} />;
   }
@@ -217,7 +247,7 @@ const SurveyEngine = ({ onClose }) => {
     const colors = levelColors[result.level] || levelColors.mild;
     const score  = result.scores?.urgency ?? null;
     return (
-      <ModalShell onClose={onClose} progress={100}>
+      <ModalShell onClose={onClose} progress={100} isDone={true}>
         <div className={`rounded-xl bg-gradient-to-br ${colors.bg} p-4 mb-4 ${colors.border} border`}>
           <div className="flex items-start gap-3 mb-3">
             <span className="text-3xl flex-shrink-0">{result.emoji}</span>
@@ -288,7 +318,7 @@ const SurveyEngine = ({ onClose }) => {
   }
 
   return (
-    <ModalShell onClose={onClose} progress={progress} onBack={question?.allowBack ? goBack : null}>
+    <ModalShell onClose={onClose} progress={progress} isDone={false} onBack={question?.allowBack ? goBack : null}>
       <div className={`transition-opacity duration-200 ${animating ? 'opacity-0' : 'opacity-100'}`}>
         <p className="text-gray-900 font-semibold text-base mb-4 leading-relaxed whitespace-pre-line">{question?.text}</p>
 
@@ -348,7 +378,9 @@ const SurveyEngine = ({ onClose }) => {
 };
 
 // ──── Оболочка модалки ────────────────────────────────────────────────────────
-const ModalShell = ({ children, onClose, progress, onBack }) => {
+const ModalShell = ({ children, onClose, progress, onBack, isDone }) => {
+  const [showConfirm, setShowConfirm] = useState(false);
+
   useEffect(() => {
     const scrollY = window.scrollY;
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
@@ -371,12 +403,38 @@ const ModalShell = ({ children, onClose, progress, onBack }) => {
     };
   }, []);
 
+  const handleCloseRequest = () => {
+    if (isDone) {
+      onClose();
+    } else {
+      setShowConfirm(true);
+    }
+  };
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      handleCloseRequest();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
+    <div
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
       style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl relative overflow-hidden flex flex-col"
-        style={{ maxHeight: '92dvh' }}>
+      onClick={handleBackdropClick}
+    >
+      <div
+        className="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl relative overflow-hidden flex flex-col"
+        style={{ maxHeight: '92dvh' }}
+      >
+        {/* Диалог подтверждения закрытия */}
+        {showConfirm && (
+          <CloseConfirmDialog
+            onStay={() => setShowConfirm(false)}
+            onExit={() => { setShowConfirm(false); onClose(); }}
+          />
+        )}
+
         <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-4 py-3 text-white flex-shrink-0">
           <div className="flex justify-center mb-2 sm:hidden">
             <div className="w-10 h-1 bg-white/40 rounded-full" />
@@ -392,9 +450,11 @@ const ModalShell = ({ children, onClose, progress, onBack }) => {
               )}
               <span className="font-bold text-sm">🫁 Диагностика дыхания</span>
             </div>
-            <button onClick={onClose}
+            <button
+              onClick={handleCloseRequest}
               className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-              aria-label="Закрыть">
+              aria-label="Закрыть"
+            >
               <X className="h-4 w-4" />
             </button>
           </div>
