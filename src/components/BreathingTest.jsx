@@ -1,452 +1,575 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CheckCircle, Clock, Sparkles, TrendingUp, ChevronLeft, ChevronRight, X, ArrowLeft, User, Mail, Phone } from 'lucide-react';
+import { QUESTIONS, getNextQuestionId, getPrevQuestionId, getTotalQuestions, getQuestionIndex, calculateResult } from '../data/surveyQuestions';
 import { sendLeadToTelegram } from '../utils/telegramNotify';
 
-// Данные вопросов теста
-const questions = [
-  {
-    id: 1,
-    text: 'Как часто вы испытываете затруднённое дыхание в покое?',
-    options: [
-      { value: 'never', label: 'Никогда' },
-      { value: 'rarely', label: 'Редко (раз в месяц)' },
-      { value: 'sometimes', label: 'Иногда (раз в неделю)' },
-      { value: 'often', label: 'Часто (несколько раз в неделю)' },
-      { value: 'always', label: 'Постоянно' },
-    ],
-  },
-  {
-    id: 2,
-    text: 'Как вы обычно дышите?',
-    options: [
-      { value: 'nose', label: 'Только через нос' },
-      { value: 'mostly_nose', label: 'Преимущественно через нос' },
-      { value: 'mixed', label: 'Попеременно нос/рот' },
-      { value: 'mostly_mouth', label: 'Преимущественно через рот' },
-      { value: 'mouth', label: 'Только через рот' },
-    ],
-  },
-  {
-    id: 3,
-    text: 'Просыпаетесь ли вы ночью из-за проблем с дыханием?',
-    options: [
-      { value: 'never', label: 'Никогда' },
-      { value: 'rarely', label: 'Редко' },
-      { value: 'sometimes', label: 'Иногда' },
-      { value: 'often', label: 'Часто' },
-    ],
-  },
-  {
-    id: 4,
-    text: 'Есть ли у вас хронические заболевания дыхательных путей?',
-    options: [
-      { value: 'none', label: 'Нет' },
-      { value: 'rhinitis', label: 'Хронический ринит/насморк' },
-      { value: 'asthma', label: 'Астма' },
-      { value: 'bronchitis', label: 'Хронический бронхит' },
-      { value: 'other', label: 'Другое' },
-    ],
-  },
-  {
-    id: 5,
-    text: 'Как вы оцениваете свой уровень стресса?',
-    options: [
-      { value: 'low', label: 'Низкий — чувствую себя спокойно' },
-      { value: 'medium', label: 'Средний — бывают напряжённые периоды' },
-      { value: 'high', label: 'Высокий — стресс почти постоянный' },
-      { value: 'very_high', label: 'Очень высокий — хронический стресс' },
-    ],
-  },
+const features = [
+  { icon: <Sparkles className="h-6 w-6" />, title: 'Адаптивные вопросы', description: 'Следующий вопрос формируется на основе ваших ответов' },
+  { icon: <CheckCircle className="h-6 w-6" />, title: 'Персональные рекомендации', description: 'Получите индивидуальный план действий по результатам теста' },
+  { icon: <TrendingUp className="h-6 w-6" />, title: 'Оценка состояния дыхания', description: 'Узнайте, насколько правильно вы дышите прямо сейчас' },
+  { icon: <Clock className="h-6 w-6" />, title: 'Всего 2–3 минуты', description: 'Только имя и контакт — больше ничего лишнего' },
 ];
 
-const TOTAL = questions.length;
-
-const scoreMap = {
-  // Q1
-  never: 0, rarely: 1, sometimes: 2, often: 3, always: 4,
-  // Q2
-  nose: 0, mostly_nose: 1, mixed: 2, mostly_mouth: 3, mouth: 4,
-  // Q3 (повтор ключей — но это нормально)
-  // Q4
-  none: 0, rhinitis: 1, asthma: 3, bronchitis: 2, other: 1,
-  // Q5
-  low: 0, medium: 1, high: 3, very_high: 4,
+const levelColors = {
+  good:     { bg: 'from-emerald-50 to-teal-50', bar: 'bg-emerald-400', border: 'border-emerald-200' },
+  mild:     { bg: 'from-yellow-50 to-orange-50', bar: 'bg-yellow-400',  border: 'border-yellow-200' },
+  moderate: { bg: 'from-orange-50 to-red-50',   bar: 'bg-orange-400',  border: 'border-orange-200' },
+  severe:   { bg: 'from-red-50 to-rose-50',     bar: 'bg-red-400',     border: 'border-red-200' },
 };
 
-function getResult(total) {
-  if (total <= 3) return { level: 'Отличный', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', emoji: '🟢', desc: 'Ваше дыхание близко к норме. Поддерживайте этот уровень профилактическими практиками Бутейко.' };
-  if (total <= 7) return { level: 'Хороший', color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200', emoji: '🔵', desc: 'Есть незначительные нарушения. Несколько занятий помогут улучшить качество дыхания.' };
-  if (total <= 12) return { level: 'Требует внимания', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200', emoji: '🟡', desc: 'Дыхание нарушено умеренно. Рекомендуется курс занятий по методу Бутейко.' };
-  return { level: 'Критический', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', emoji: '🔴', desc: 'Серьёзные нарушения дыхания. Необходима персональная работа с инструктором.' };
-}
+// ──── Диалог подтверждения закрытия ──────────────────────────────────────────
+const CloseConfirmDialog = ({ onStay, onExit }) => (
+  <div
+    className="absolute inset-0 z-10 flex items-center justify-center rounded-t-2xl sm:rounded-2xl"
+    style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }}
+  >
+    <div className="bg-white rounded-2xl shadow-2xl mx-4 p-6 max-w-sm w-full text-center">
+      <div className="text-3xl mb-3">🤔</div>
+      <h3 className="text-lg font-bold text-gray-900 mb-2">Уверены, что хотите закрыть?</h3>
+      <p className="text-gray-500 text-sm mb-5">Прогресс будет потерян</p>
+      <div className="flex gap-3">
+        <button
+          onClick={onStay}
+          className="flex-1 py-3 rounded-xl border-2 border-teal-500 text-teal-600 font-bold text-sm hover:bg-teal-50 transition-colors"
+        >
+          Остаться
+        </button>
+        <button
+          onClick={onExit}
+          className="flex-1 py-3 rounded-xl bg-gray-100 text-gray-700 font-bold text-sm hover:bg-gray-200 transition-colors"
+        >
+          Выйти
+        </button>
+      </div>
+    </div>
+  </div>
+);
 
-const BreathingTest = () => {
-  const [step, setStep] = useState('intro'); // intro | questions | contact | result
-  const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [contact, setContact] = useState({ name: '', phone: '', email: '' });
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
-  const sliderRef = useRef(null);
+// ──── Контактная форма ────────────────────────────────────────────────────────
+const ContactScreen = ({ onNext, onClose }) => {
+  const [name, setName]   = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [errors, setErrors] = useState({});
 
-  const slides = [
+  const validate = () => {
+    const e = {};
+    if (!name.trim()) e.name = 'Введите ваше имя';
+    if (!email.trim() && !phone.trim()) e.contact = 'Укажите email или телефон';
+    if (email.trim() && !/^[^@]+@[^@]+\.[^@]+$/.test(email)) e.email = 'Некорректный email';
+    return e;
+  };
+
+  const handleSubmit = () => {
+    const e = validate();
+    if (Object.keys(e).length) { setErrors(e); return; }
+    onNext({ name: name.trim(), email: email.trim(), phone: phone.trim() });
+  };
+
+  return (
+    <ModalShell onClose={onClose} progress={0} isDone={false}>
+      <div className="text-center mb-5">
+        <div className="text-4xl mb-2">🫁</div>
+        <h3 className="text-xl font-bold text-gray-900 mb-1">Бесплатная диагностика дыхания</h3>
+        <p className="text-gray-500 text-sm">Укажите контакты — результат и рекомендации отправим вам</p>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
+            Имя <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              value={name}
+              onChange={e => { setName(e.target.value); setErrors(p => ({...p, name: ''})); }}
+              placeholder="Ваше имя"
+              className={`w-full pl-10 pr-4 py-3 rounded-xl border-2 text-sm outline-none transition-colors ${
+                errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-teal-400'
+              }`}
+            />
+          </div>
+          {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
+            Email <span className="text-red-500">*</span>
+            <span className="text-gray-400 font-normal ml-1">(или телефон)</span>
+          </label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="email"
+              value={email}
+              onChange={e => { setEmail(e.target.value); setErrors(p => ({...p, email: '', contact: ''})); }}
+              placeholder="example@mail.ru"
+              className={`w-full pl-10 pr-4 py-3 rounded-xl border-2 text-sm outline-none transition-colors ${
+                errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-teal-400'
+              }`}
+            />
+          </div>
+          {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
+            Телефон
+            <span className="text-gray-400 font-normal ml-1">(необязательно)</span>
+          </label>
+          <div className="relative">
+            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="tel"
+              value={phone}
+              onChange={e => { setPhone(e.target.value); setErrors(p => ({...p, contact: ''})); }}
+              placeholder="+7 999 000-00-00"
+              className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-400 text-sm outline-none transition-colors"
+            />
+          </div>
+          {errors.contact && <p className="text-red-500 text-xs mt-1">{errors.contact}</p>}
+        </div>
+      </div>
+
+      <button
+        onClick={handleSubmit}
+        className="mt-5 w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-3.5 rounded-xl text-base hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+      >
+        Начать диагностику →
+      </button>
+      <p className="text-center text-gray-400 text-xs mt-2">Данные не передаются третьим лицам</p>
+    </ModalShell>
+  );
+};
+
+// ──── Движок анкеты ───────────────────────────────────────────────────────────
+const SurveyEngine = ({ onClose }) => {
+  const [screen, setScreen]               = useState('contact');
+  const [contact, setContact]             = useState(null);
+  const [userData, setUserData]           = useState({});
+  const [currentId, setCurrentId]         = useState('age_group');
+  const [multiSelected, setMultiSelected] = useState([]);
+  const [animating, setAnimating]         = useState(false);
+  const [result, setResult]               = useState(null);
+  const [sending, setSending]             = useState(false);
+  const [sent, setSent]                   = useState(false);
+
+  const scaleClickedRef = useRef(null);
+  const [scalePressedValue, setScalePressedValue] = useState(null);
+
+  useEffect(() => {
+    scaleClickedRef.current = null;
+    setScalePressedValue(null);
+  }, [currentId]);
+
+  const total      = getTotalQuestions(userData);
+  const currentIdx = getQuestionIndex(currentId, userData);
+  const progress   = screen === 'contact' ? 0
+                   : screen === 'done'    ? 100
+                   : Math.max(5, Math.round((currentIdx / total) * 100));
+
+  const question = QUESTIONS[currentId];
+
+  const goNext = (newData) => {
+    const updated = { ...userData, ...newData };
+    setUserData(updated);
+    const next = getNextQuestionId(currentId, updated);
+    setAnimating(true);
+    setTimeout(() => {
+      setMultiSelected([]);
+      if (next) {
+        setCurrentId(next);
+      } else {
+        const res = calculateResult(updated);
+        setResult(res);
+        setScreen('done');
+      }
+      setAnimating(false);
+    }, 200);
+  };
+
+  const goBack = () => {
+    const prev = getPrevQuestionId(currentId, userData);
+    if (prev) {
+      setAnimating(true);
+      setTimeout(() => {
+        setCurrentId(prev);
+        setMultiSelected(userData[prev] || []);
+        setAnimating(false);
+      }, 200);
+    } else {
+      setScreen('contact');
+    }
+  };
+
+  const handleSingle = (value) => goNext({ [currentId]: value });
+
+  const handleScale = (value) => {
+    setScalePressedValue(value);
+    goNext({ [currentId]: value });
+  };
+
+  const handleMultiToggle = (value) => {
+    setMultiSelected(prev => {
+      if (prev.includes(value)) return prev.filter(v => v !== value);
+      if (question.maxSelections && prev.length >= question.maxSelections) return prev;
+      return [...prev, value];
+    });
+  };
+  const handleMultiDone = () => {
+    if (multiSelected.length < (question.minSelections || 1)) return;
+    goNext({ [currentId]: multiSelected });
+  };
+
+  const handleBook = async () => {
+    if (sent) { window.open('https://t.me/AS_Popov87', '_blank'); return; }
+    setSending(true);
+    try {
+      await sendLeadToTelegram({ contact, userData, result });
+      setSent(true);
+    } catch(e) {
+      console.error(e);
+    } finally {
+      setSending(false);
+      window.open('https://t.me/AS_Popov87', '_blank');
+    }
+  };
+
+  const isDone = screen === 'done';
+
+  if (screen === 'contact') {
+    return <ContactScreen onClose={onClose} onNext={(c) => { setContact(c); setScreen('survey'); }} />;
+  }
+
+  if (screen === 'done' && result) {
+    const colors = levelColors[result.level] || levelColors.mild;
+    const score  = result.scores?.urgency ?? null;
+    return (
+      <ModalShell onClose={onClose} progress={100} isDone={true}>
+        <div className={`rounded-xl bg-gradient-to-br ${colors.bg} p-4 mb-4 ${colors.border} border`}>
+          <div className="flex items-start gap-3 mb-3">
+            <span className="text-3xl flex-shrink-0">{result.emoji}</span>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 leading-tight">{result.title}</h3>
+              <p className="text-sm font-medium text-gray-600">{result.subtitle}</p>
+            </div>
+          </div>
+          {score !== null && (
+            <div className="mb-3">
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Индекс нарушения дыхания</span>
+                <span className="font-bold text-gray-700">{score}/100</span>
+              </div>
+              <div className="w-full bg-white/70 rounded-full h-2.5">
+                <div className={`${colors.bar} rounded-full h-2.5 transition-all duration-700`} style={{ width: `${score}%` }} />
+              </div>
+            </div>
+          )}
+          <p className="text-sm text-gray-700 leading-relaxed">{result.description}</p>
+        </div>
+
+        {result.recommendations?.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">📝 Что делать дальше</p>
+            <ul className="space-y-1.5">
+              {result.recommendations.map((tip, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                  <span className="mt-0.5 flex-shrink-0">•</span><span>{tip}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-4 mb-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">АП</div>
+            <div>
+              <p className="text-sm font-bold text-gray-900">Александр Попов</p>
+              <p className="text-xs text-gray-500">Методист по дыханию Бутейко · <span className="text-orange-600">@AS_Popov87</span></p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-700 leading-relaxed">
+            {contact?.name ? `${contact.name}, запишитесь` : 'Запишитесь'} на <strong>пробное занятие</strong> — разберём ваш результат вместе и составим персональный план.
+          </p>
+        </div>
+
+        <button
+          onClick={handleBook}
+          disabled={sending}
+          className="inline-flex flex-col items-center justify-center gap-0.5 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3.5 rounded-xl text-base hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] mb-2 disabled:opacity-70 disabled:cursor-wait"
+        >
+          {sending ? (
+            <span>⏳ Отправляем...</span>
+          ) : sent ? (
+            <span>✅ Записаться в Telegram →</span>
+          ) : (
+            <>
+              <span>📲 Записаться на пробное занятие →</span>
+              <span className="text-sm font-semibold opacity-90">1 500 ₽</span>
+            </>
+          )}
+        </button>
+        <button onClick={onClose} className="w-full text-gray-400 text-sm hover:text-gray-600 transition-colors py-1">Закрыть</button>
+      </ModalShell>
+    );
+  }
+
+  return (
+    <ModalShell onClose={onClose} progress={progress} isDone={false} onBack={question?.allowBack ? goBack : null}>
+      <div className={`transition-opacity duration-200 ${animating ? 'opacity-0' : 'opacity-100'}`}>
+        <p className="text-gray-900 font-semibold text-base mb-4 leading-relaxed whitespace-pre-line">{question?.text}</p>
+
+        {question?.type === 'single_choice' && (
+          <div className="flex flex-col gap-2">
+            {question.options.map(opt => (
+              <button key={opt.value} onClick={() => handleSingle(opt.value)}
+                className="w-full text-left px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-teal-400 hover:bg-teal-50 transition-all duration-150 text-gray-800 font-medium text-sm active:scale-[0.98]">
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {question?.type === 'scale' && (
+          <div className="flex flex-wrap gap-2 justify-center">
+            {question.options.map(opt => {
+              const isActive = !animating && scalePressedValue === opt.value;
+              return (
+                <button key={opt.value} onClick={() => handleScale(opt.value)}
+                  className={`w-12 h-12 rounded-full border-2 font-bold text-sm transition-all duration-150 active:scale-95 ${
+                    isActive
+                      ? 'border-teal-500 bg-teal-500 text-white scale-110'
+                      : 'border-gray-200 hover:border-teal-400 hover:bg-teal-100 text-gray-700'
+                  }`}>
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {question?.type === 'multiple_choice' && (
+          <div className="flex flex-col gap-2">
+            <p className="text-xs text-gray-500 mb-1">Макс. {question.maxSelections} варианта</p>
+            {question.options.map(opt => {
+              const selected = multiSelected.includes(opt.value);
+              return (
+                <button key={opt.value} onClick={() => handleMultiToggle(opt.value)}
+                  className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all duration-150 text-sm font-medium active:scale-[0.98] ${
+                    selected ? 'border-teal-500 bg-teal-50 text-teal-800' : 'border-gray-200 hover:border-teal-300 hover:bg-teal-50 text-gray-800'
+                  }`}>
+                  <span className="mr-2">{selected ? '✅' : '○'}</span>{opt.label}
+                </button>
+              );
+            })}
+            <button onClick={handleMultiDone}
+              disabled={multiSelected.length < (question.minSelections || 1)}
+              className="mt-2 w-full bg-teal-500 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl text-base transition-all duration-150 hover:bg-teal-600 active:scale-[0.98]">
+              Готово →
+            </button>
+          </div>
+        )}
+      </div>
+    </ModalShell>
+  );
+};
+
+// ──── Оболочка модалки ────────────────────────────────────────────────────────
+const ModalShell = ({ children, onClose, progress, onBack, isDone }) => {
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    document.body.style.overflowY = 'scroll';
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflowY = '';
+      document.body.style.paddingRight = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
+
+  const handleCloseRequest = () => {
+    if (isDone) {
+      onClose();
+    } else {
+      setShowConfirm(true);
+    }
+  };
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      handleCloseRequest();
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
+      style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+      onClick={handleBackdropClick}
+    >
+      <div
+        className="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl relative overflow-hidden flex flex-col"
+        style={{ maxHeight: '92dvh' }}
+      >
+        {showConfirm && (
+          <CloseConfirmDialog
+            onStay={() => setShowConfirm(false)}
+            onExit={() => { setShowConfirm(false); onClose(); }}
+          />
+        )}
+
+        <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-4 py-3 text-white flex-shrink-0">
+          <div className="flex justify-center mb-2 sm:hidden">
+            <div className="w-10 h-1 bg-white/40 rounded-full" />
+          </div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              {onBack && (
+                <button onClick={onBack}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                  aria-label="Назад">
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+              )}
+              <span className="font-bold text-sm">🫁 Диагностика дыхания</span>
+            </div>
+            <button
+              onClick={handleCloseRequest}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+              aria-label="Закрыть"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="w-full bg-white/30 rounded-full h-1.5">
+            <div className="bg-white rounded-full h-1.5 transition-all duration-500" style={{ width: `${progress}%` }} />
+          </div>
+          <p className="text-teal-100 text-xs mt-1">{progress}% завершено</p>
+        </div>
+        <div className="px-4 py-5 overflow-y-auto flex-1">{children}</div>
+      </div>
+    </div>
+  );
+};
+
+// ──── Основная секция ─────────────────────────────────────────────────────────
+const BreathingTest = ({ surveyOpen, onSurveyToggle }) => {
+  const [currentScreen, setCurrentScreen] = useState(0);
+
+  const openSurvey  = () => onSurveyToggle(true);
+  const closeSurvey = () => onSurveyToggle(false);
+
+  const screens = [
     { image: '/images/bot-screen-1.jpg', alt: 'Интерфейс теста - экран 1' },
     { image: '/images/bot-screen-2.jpg', alt: 'Интерфейс теста - экран 2' },
     { image: '/images/bot-screen-3.jpg', alt: 'Интерфейс теста - экран 3' },
     { image: '/images/bot-screen-4.jpg', alt: 'Интерфейс теста - экран 4' },
   ];
 
-  const goToTestBot = () => window.open('https://t.me/breathing_lead_diagnostic_bot?start=website_test', '_blank');
+  const nextScreen  = () => setCurrentScreen(p => (p + 1) % screens.length);
+  const prevScreen  = () => setCurrentScreen(p => (p - 1 + screens.length) % screens.length);
+  const goToTestBot = () => window.open('https://t.me/breathing_diagnostic_bot?start=website_test', '_blank');
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveSlide(prev => (prev + 1) % slides.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [slides.length]);
+  return (
+    <>
+      {surveyOpen && <SurveyEngine onClose={closeSurvey} />}
 
-  const handleAnswer = (value) => {
-    setAnswers(prev => ({ ...prev, [current]: value }));
-  };
-
-  const handleNext = () => {
-    if (current < TOTAL - 1) {
-      setCurrent(c => c + 1);
-    } else {
-      setStep('contact');
-    }
-  };
-
-  const handleBack = () => {
-    if (current > 0) setCurrent(c => c - 1);
-    else setStep('intro');
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSending(true);
-
-    const score = Object.values(answers).reduce((sum, v) => sum + (scoreMap[v] ?? 0), 0);
-    const result = getResult(score);
-
-    const message = `
-🧪 *Новый результат теста с сайта*
-
-👤 *Имя:* ${contact.name}
-📞 *Телефон:* ${contact.phone}
-📧 *Email:* ${contact.email || 'не указан'}
-
-📊 *Результат теста:* ${result.emoji} ${result.level} (${score} баллов)
-📝 *Ответы:*
-${questions.map((q, i) => `${i + 1}. ${q.text}\n   → ${q.options.find(o => o.value === answers[i])?.label || '—'}`).join('\n')}
-    `.trim();
-
-    const sent = await sendLeadToTelegram(message);
-    setSending(false);
-    setSent(sent);
-    setStep('result');
-  };
-
-  const score = Object.values(answers).reduce((sum, v) => sum + (scoreMap[v] ?? 0), 0);
-  const result = getResult(score);
-
-  // ── INTRO ──────────────────────────────────────────────────────────────────
-  if (step === 'intro') {
-    return (
       <section id="breathing-test" className="py-20 bg-gradient-to-br from-orange-100 via-white to-teal-100 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-orange-200 rounded-full opacity-20 blur-3xl" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-orange-200 rounded-full opacity-10 blur-3xl" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-200 rounded-full opacity-10 blur-3xl" />
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 relative">
-          <div className="text-center mb-12">
-            <span className="inline-block bg-orange-100 text-orange-700 text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
-              🧪 Бесплатный тест
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Проверьте качество своего дыхания
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              5 вопросов — и вы узнаете, насколько ваше дыхание соответствует норме по методу Бутейко
-            </p>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+          <div className="lg:grid lg:grid-cols-2 lg:gap-12 items-center">
+            <div className="mb-12 lg:mb-0">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full px-4 py-2 mb-6 shadow-lg">
+                <Sparkles className="h-4 w-4" />
+                <span className="font-semibold text-sm">Одна из лучших анкет в рунете</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Бесплатная диагностика вашего дыхания</h2>
+              <p className="text-xl text-gray-600 mb-8 leading-relaxed">Пройдите интерактивный тест и получите персональные рекомендации по улучшению качества дыхания.</p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Слайдер скриншотов */}
-            <div className="relative" ref={sliderRef}>
-              <div className="relative w-full max-w-sm mx-auto">
-                <div className="relative h-[480px] rounded-3xl overflow-hidden shadow-2xl bg-gray-900">
-                  {slides.map((slide, i) => (
-                    <img
-                      key={i}
-                      src={slide.image}
-                      alt={slide.alt}
-                      loading="lazy"
-                      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${i === activeSlide ? 'opacity-100' : 'opacity-0'}`}
-                    />
-                  ))}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-                    {slides.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setActiveSlide(i)}
-                        className={`w-2 h-2 rounded-full transition-all ${i === activeSlide ? 'bg-white w-6' : 'bg-white/50'}`}
-                      />
-                    ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                {features.map((feature, index) => (
+                  <div key={index} className="flex items-start gap-3 p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 group">
+                    <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center text-white group-hover:scale-110 transition-transform duration-300">{feature.icon}</div>
+                    <div><h3 className="font-semibold text-gray-900 mb-1">{feature.title}</h3><p className="text-sm text-gray-600">{feature.description}</p></div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-wrap">
+                <button onClick={goToTestBot}
+                  className="group bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-4 px-8 rounded-full text-lg shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 13.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
+                  <span>Пройти диагностику в Telegram</span>
+                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                </button>
+                <button onClick={openSurvey}
+                  className="group bg-white border-2 border-teal-500 text-teal-600 font-bold py-4 px-8 rounded-full text-lg shadow-md hover:shadow-xl hover:bg-teal-50 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2">
+                  <span>🫁 Пройти анкету на сайте</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 text-gray-600 mt-4">
+                <span className="text-sm"><strong>200+</strong> человек уже прошли диагностику</span>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="relative mx-auto" style={{ maxWidth: '380px' }}>
+                <div className="relative bg-gray-900 rounded-[3rem] p-3 shadow-2xl">
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-3xl z-10" />
+                  <div className="bg-gray-100 rounded-[2.5rem] overflow-hidden shadow-inner relative" style={{ aspectRatio: '9/19.5' }}>
+                    <img src={process.env.PUBLIC_URL + screens[currentScreen].image} alt={screens[currentScreen].alt}
+                      className="w-full h-full object-contain bg-white" style={{ objectPosition: 'center' }}
+                      onError={e => { e.target.style.display = 'none'; }} />
+                    {screens.length > 1 && (
+                      <>
+                        <button onClick={prevScreen} className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 z-20" aria-label="Предыдущий"><ChevronLeft className="h-6 w-6 text-gray-800" /></button>
+                        <button onClick={nextScreen} className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 z-20" aria-label="Следующий"><ChevronRight className="h-6 w-6 text-gray-800" /></button>
+                      </>
+                    )}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+                      {screens.map((_, index) => (
+                        <button key={index} onClick={() => setCurrentScreen(index)}
+                          className={`transition-all duration-300 rounded-full ${index === currentScreen ? 'bg-orange-500 w-6 h-2' : 'bg-gray-400 hover:bg-gray-500 w-2 h-2'}`}
+                          aria-label={`Скриншот ${index+1}`} />
+                      ))}
+                    </div>
                   </div>
                 </div>
+                <div className="absolute -top-6 -right-6 w-24 h-24 bg-orange-400 rounded-full opacity-20 blur-2xl animate-pulse" />
                 <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-teal-400 rounded-full opacity-20 blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
-                <div className="absolute -top-6 -right-6 w-32 h-32 bg-orange-400 rounded-full opacity-20 blur-2xl animate-pulse" />
               </div>
             </div>
+          </div>
 
-            {/* Описание и кнопки */}
-            <div className="flex flex-col gap-6">
-              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Что вы узнаете:</h3>
-                <ul className="space-y-3">
-                  {[
-                    'Уровень CO₂ в вашем организме',
-                    'Насколько правильно вы дышите',
-                    'Какие симптомы связаны с дыханием',
-                    'Персональные рекомендации',
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-teal-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => setStep('questions')}
-                  className="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-4 px-8 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <Sparkles className="h-5 w-5" />
-                  Пройти тест на сайте
-                </button>
-
-                <button
-                  onClick={goToTestBot}
-                  className="w-full bg-white border-2 border-teal-500 text-teal-600 font-semibold py-4 px-8 rounded-xl text-lg hover:bg-teal-50 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.038 9.589c-.148.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.19 14.065l-2.965-.924c-.645-.204-.658-.645.136-.953l11.57-4.461c.537-.194 1.006.131.631.521z"/>
-                  </svg>
-                  Пройти в Telegram-боте
-                </button>
-              </div>
-
-              <div className="flex items-center gap-4 text-sm text-gray-500">
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  <span>5 минут</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <TrendingUp className="h-4 w-4" />
-                  <span>Персональный результат</span>
-                </div>
-              </div>
+          <div className="mt-16 pt-12 border-t border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+              <div><div className="text-4xl font-bold text-orange-600 mb-2">2–3 мин</div><p className="text-gray-600">Время прохождения теста</p></div>
+              <div><div className="text-4xl font-bold text-orange-600 mb-2">15+</div><p className="text-gray-600">Адаптивных вопросов</p></div>
+              <div><div className="text-4xl font-bold text-orange-600 mb-2">100%</div><p className="text-gray-600">Бесплатно и анонимно</p></div>
             </div>
           </div>
         </div>
       </section>
-    );
-  }
-
-  // ── QUESTIONS ──────────────────────────────────────────────────────────────
-  if (step === 'questions') {
-    const q = questions[current];
-    const selected = answers[current];
-    const progress = ((current + 1) / TOTAL) * 100;
-
-    return (
-      <section id="breathing-test" className="py-20 bg-gradient-to-br from-teal-50 to-white">
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-white rounded-3xl shadow-xl p-8">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <button onClick={handleBack} className="text-gray-400 hover:text-gray-600 transition-colors">
-                <ArrowLeft className="h-6 w-6" />
-              </button>
-              <span className="text-sm font-medium text-gray-500">
-                Вопрос {current + 1} из {TOTAL}
-              </span>
-              <button onClick={() => setStep('intro')} className="text-gray-400 hover:text-gray-600 transition-colors">
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            {/* Progress */}
-            <div className="w-full bg-gray-100 rounded-full h-2 mb-8">
-              <div
-                className="bg-gradient-to-r from-teal-400 to-teal-600 h-2 rounded-full transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-
-            {/* Question */}
-            <h3 className="text-xl font-bold text-gray-900 mb-6">{q.text}</h3>
-
-            {/* Options */}
-            <div className="space-y-3 mb-8">
-              {q.options.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => handleAnswer(opt.value)}
-                  className={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all duration-200 font-medium ${
-                    selected === opt.value
-                      ? 'border-teal-500 bg-teal-50 text-teal-700'
-                      : 'border-gray-200 hover:border-teal-300 hover:bg-teal-50/50 text-gray-700'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Next button */}
-            <button
-              onClick={handleNext}
-              disabled={!selected}
-              className="w-full bg-teal-600 text-white font-bold py-4 rounded-xl hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
-            >
-              {current < TOTAL - 1 ? (
-                <>Далее <ChevronRight className="h-5 w-5" /></>
-              ) : (
-                <>Узнать результат <Sparkles className="h-5 w-5" /></>
-              )}
-            </button>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // ── CONTACT ────────────────────────────────────────────────────────────────
-  if (step === 'contact') {
-    return (
-      <section id="breathing-test" className="py-20 bg-gradient-to-br from-teal-50 to-white">
-        <div className="max-w-md mx-auto px-4">
-          <div className="bg-white rounded-3xl shadow-xl p-8">
-            <div className="text-center mb-6">
-              <div className="text-4xl mb-3">🎉</div>
-              <h3 className="text-2xl font-bold text-gray-900">Тест завершён!</h3>
-              <p className="text-gray-600 mt-2">Оставьте контакты, чтобы получить персональный разбор результатов</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ваше имя *</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    required
-                    value={contact.name}
-                    onChange={e => setContact(p => ({ ...p, name: e.target.value }))}
-                    placeholder="Как вас зовут?"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Телефон *</label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="tel"
-                    required
-                    value={contact.phone}
-                    onChange={e => setContact(p => ({ ...p, phone: e.target.value }))}
-                    placeholder="+7 (___) ___-__-__"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email (необязательно)</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="email"
-                    value={contact.email}
-                    onChange={e => setContact(p => ({ ...p, email: e.target.value }))}
-                    placeholder="your@email.com"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={sending}
-                className="w-full bg-teal-600 text-white font-bold py-4 rounded-xl hover:bg-teal-700 disabled:opacity-60 transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                {sending ? 'Отправляем...' : (
-                  <><Sparkles className="h-5 w-5" /> Получить результат</>
-                )}
-              </button>
-
-              <p className="text-xs text-gray-400 text-center">
-                Нажимая кнопку, вы соглашаетесь на обработку персональных данных
-              </p>
-            </form>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // ── RESULT ─────────────────────────────────────────────────────────────────
-  return (
-    <section id="breathing-test" className="py-20 bg-gradient-to-br from-teal-50 to-white">
-      <div className="max-w-lg mx-auto px-4">
-        <div className="bg-white rounded-3xl shadow-xl p-8 text-center">
-          <div className="text-5xl mb-4">{result.emoji}</div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">Ваш результат</h3>
-
-          <div className={`inline-block px-6 py-2 rounded-full text-lg font-bold mb-4 ${result.bg} ${result.color} border ${result.border}`}>
-            {result.level}
-          </div>
-
-          <p className="text-gray-600 mb-6">{result.desc}</p>
-
-          {sent ? (
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-              <p className="text-green-700 font-medium">✅ Ваши данные отправлены! Инструктор свяжется с вами.</p>
-            </div>
-          ) : (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-              <p className="text-red-600 text-sm">Не удалось отправить данные. Напишите напрямую:</p>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={goToTestBot}
-              className="w-full bg-teal-600 text-white font-bold py-4 rounded-xl hover:bg-teal-700 transition-all duration-200 flex items-center justify-center gap-2"
-            >
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.038 9.589c-.148.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.19 14.065l-2.965-.924c-.645-.204-.658-.645.136-.953l11.57-4.461c.537-.194 1.006.131.631.521z"/>
-              </svg>
-              Подробный анализ в Telegram
-            </button>
-
-            <button
-              onClick={() => { setStep('intro'); setCurrent(0); setAnswers({}); }}
-              className="w-full border-2 border-gray-200 text-gray-600 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-all duration-200"
-            >
-              Пройти тест снова
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
+    </>
   );
 };
 
