@@ -3,7 +3,7 @@ import { Check, Send, MessageCircle } from 'lucide-react';
 import SectionTransition from './SectionTransition';
 import ContactForm from './ContactForm';
 
-const TELEGRAM_BOT = 'breathing_lead_diagnostic_bot';
+const TELEGRAM_BOT = 'breathing_opros_bot';
 
 const plans = [
   {
