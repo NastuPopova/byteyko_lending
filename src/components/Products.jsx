@@ -3,7 +3,7 @@ import { Check, Send, MessageCircle } from 'lucide-react';
 import SectionTransition from './SectionTransition';
 import ContactForm from './ContactForm';
 
-const TELEGRAM_BOT = 'breathing_opros_bot';
+const TELEGRAM_BOT = 'breathing_lead_diagnostic_bot';
 
 const plans = [
   {
@@ -98,83 +98,81 @@ const Products = () => {
             {plans.map((plan) => (
               <div
                 key={plan.id}
-                id={plan.id}
-                className={`bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 flex flex-col${plan.highlight ? ' ring-2 ring-primary-500' : ''}`}
+                className={`rounded-2xl p-8 shadow-xl flex flex-col transition-all duration-300 hover:scale-105 ${
+                  plan.highlight
+                    ? 'bg-gradient-to-br from-primary-600 to-primary-800 text-white ring-4 ring-yellow-400'
+                    : 'bg-white text-gray-900'
+                }`}
               >
-                <div className="relative p-8 flex flex-col flex-1">
-                  {/* Бейдж */}
-                  <div
-                    className="inline-block self-start px-4 py-1 rounded-full text-sm font-semibold mb-4"
-                    style={{ background: plan.badgeBg, color: plan.badgeColor }}
+                <div className="mb-2">
+                  <span
+                    className="inline-block text-xs font-bold px-3 py-1 rounded-full mb-3"
+                    style={{ color: plan.badgeColor, backgroundColor: plan.badgeBg }}
                   >
                     {plan.badge}
-                  </div>
-
-                  <h3 className="text-2xl font-bold text-gray-900">{plan.title}</h3>
-                  <p className="text-gray-600 mt-1 mb-4">{plan.subtitle}</p>
-
-                  {/* Для кого */}
+                  </span>
+                  <h3 className={`text-2xl font-bold mb-1 ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>
+                    {plan.title}
+                  </h3>
+                  <p className={`text-sm mb-4 ${plan.highlight ? 'text-primary-100' : 'text-gray-500'}`}>
+                    {plan.subtitle}
+                  </p>
                   {plan.forWhom && (
-                    <p className="text-sm text-primary-700 bg-primary-50 rounded-lg px-3 py-2 mb-4">
-                      <span className="font-semibold">Для кого:</span> {plan.forWhom}
+                    <p className={`text-xs italic mb-4 ${plan.highlight ? 'text-primary-200' : 'text-gray-400'}`}>
+                      Для кого: {plan.forWhom}
                     </p>
                   )}
-
-                  {/* Фичи */}
-                  <ul className="space-y-3 mb-6 flex-1">
-                    {plan.features.map((f, i) => (
-                      <li key={i} className="flex items-start">
-                        <Check className="h-5 w-5 text-primary-500 mr-3 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-700">{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* Цена */}
-                  <div className="flex flex-col items-center mb-2">
-                    <div className="flex items-baseline">
-                      <span className="text-5xl font-extrabold text-gray-900">{plan.price}</span>
-                      <span className="text-xl text-gray-500 ml-1">{plan.unit}</span>
-                    </div>
-                  </div>
-
-                  {/* CTA */}
-                  <button
-                    onClick={() => handleTelegramRedirect(plan.ctaKey)}
-                    className={`w-full mt-6 font-semibold py-4 px-8 rounded-full text-lg shadow-lg flex items-center justify-center transition-all duration-300${
-                      plan.highlight
-                        ? ' bg-primary-600 text-white hover:bg-primary-700 hover:scale-105'
-                        : ' bg-primary-600 text-white hover:bg-primary-700'
-                    }`}
-                  >
-                    <Send className="h-5 w-5 mr-2" />
-                    {plan.cta}
-                  </button>
                 </div>
+
+                <div className="flex items-baseline mb-6">
+                  <span className={`text-4xl font-extrabold ${plan.highlight ? 'text-white' : 'text-primary-600'}`}>
+                    {plan.price}
+                  </span>
+                  <span className={`ml-1 text-lg ${plan.highlight ? 'text-primary-100' : 'text-gray-500'}`}>
+                    {plan.unit}
+                  </span>
+                </div>
+
+                <ul className="space-y-3 mb-8 flex-1">
+                  {plan.features.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <Check className={`h-5 w-5 mt-0.5 flex-shrink-0 ${plan.highlight ? 'text-yellow-400' : 'text-primary-500'}`} />
+                      <span className={`text-sm ${plan.highlight ? 'text-primary-100' : 'text-gray-600'}`}>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  onClick={() => handleTelegramRedirect(plan.ctaKey)}
+                  className={`w-full font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors duration-300 ${
+                    plan.highlight
+                      ? 'bg-yellow-400 text-primary-900 hover:bg-yellow-300'
+                      : 'bg-primary-600 text-white hover:bg-primary-700'
+                  }`}
+                >
+                  <Send className="h-5 w-5" />
+                  {plan.cta}
+                </button>
               </div>
             ))}
           </div>
 
-          {/* Блок обратной связи */}
-          <div className="mt-12 pt-10 border-t border-primary-200 text-center">
-            <p className="text-gray-500 text-base mb-4">
-              Telegram не работает? Оставьте заявку — отвечу на почту
-            </p>
+          <div className="mt-12 text-center">
             <button
-              onClick={() => setShowFeedback(true)}
-              className="inline-flex items-center justify-center bg-primary-600 text-white font-semibold py-3 px-8 rounded-full hover:bg-primary-700 transition-colors duration-300 shadow-md"
+              onClick={() => setShowFeedback(!showFeedback)}
+              className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium transition-colors"
             >
-              <MessageCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-              Написать инструктору
+              <MessageCircle className="h-5 w-5" />
+              Есть вопросы? Напишите нам
             </button>
+            {showFeedback && (
+              <div className="mt-6 max-w-xl mx-auto">
+                <ContactForm />
+              </div>
+            )}
           </div>
         </div>
       </SectionTransition>
-
-      <ContactForm
-        isOpen={showFeedback}
-        onClose={() => setShowFeedback(false)}
-      />
     </section>
   );
 };
