@@ -484,7 +484,7 @@ const BreathingTest = ({ surveyOpen, onSurveyToggle }) => {
 
   const nextScreen  = () => setCurrentScreen(p => (p + 1) % screens.length);
   const prevScreen  = () => setCurrentScreen(p => (p - 1 + screens.length) % screens.length);
-  const goToTestBot = () => window.open('https://t.me/breathing_diagnostic_bot?start=website_test', '_blank');
+  const goToTestBot = () => window.open('https://t.me/breathing_lead_diagnostic_bot?start=website_test', '_blank');
 
   return (
     <>
