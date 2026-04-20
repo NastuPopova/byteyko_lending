@@ -1,7 +1,7 @@
 import React from 'react';
 import { Send, Gift } from 'lucide-react';
 
-const TELEGRAM_BOT = 'breathing_opros_bot';
+const TELEGRAM_BOT = 'breathing_lead_diagnostic_bot';
 
 const BuyCourse = () => {
   const handleTelegramRedirect = (key) => {

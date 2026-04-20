@@ -14,7 +14,7 @@ const Hero = () => {
 
   // Запись на консультацию через бота
   const goToBot = () => {
-    window.open('https://t.me/breathing_opros_bot?start=website_hero', '_blank');
+    window.open('https://t.me/breathing_lead_diagnostic_bot?start=website_hero', '_blank');
   };
 
   // Плавный скролл к секции с описанием теста
