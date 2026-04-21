@@ -33,8 +33,11 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          PUBLIC_URL: /byteyko_lending
+          PUBLIC_URL: /
           CI: false
+
+      - name: Copy CNAME to build
+        run: cp CNAME build/CNAME
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
