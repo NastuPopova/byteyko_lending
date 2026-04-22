@@ -35,6 +35,7 @@ jobs:
         env:
           PUBLIC_URL: /
           CI: false
+          REACT_APP_NOTIFY_TOKEN: ${{ secrets.REACT_APP_NOTIFY_TOKEN }}
 
       - name: Copy CNAME to build
         run: cp CNAME build/CNAME
