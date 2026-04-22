@@ -142,7 +142,7 @@ function fetchWithTimeout(url, options, ms = 8000) {
     .finally(() => clearTimeout(timer));
 }
 
-// ── Экспорт ───────────────────────────────────────────────────────────────────
+// ── Лиды с дыхательного теста ────────────────────────────────────────────────
 export async function sendLeadToTelegram({ contact, userData, result }) {
   const payload = {
     name:    contact.name,
@@ -153,7 +153,6 @@ export async function sendLeadToTelegram({ contact, userData, result }) {
     profile: result?.title  || '',
     tech:    result?.technique || '',
 
-    // Переводим age_group и occupation через VALUE_LABELS
     age_group:            VALUE_LABELS[userData.age_group] || userData.age_group || '',
     occupation:           VALUE_LABELS[userData.occupation] || userData.occupation || '',
     physical_activity:    VALUE_LABELS[userData.physical_activity] || userData.physical_activity || '',
@@ -162,8 +161,6 @@ export async function sendLeadToTelegram({ contact, userData, result }) {
                             ? userData.current_problems.map(v => VALUE_LABELS[v] || v).join(', ')
                             : (VALUE_LABELS[userData.current_problems] || userData.current_problems || ''),
 
-    // ИСПРАВЛЕНО: number-поля — используем !== undefined, чтобы 0 не потерялся
-    // Форматируем сразу в "05/10" для единообразия
     stress_level:         userData.stress_level !== undefined && userData.stress_level !== null
                             ? formatScale(userData.stress_level)
                             : '',
@@ -214,6 +211,63 @@ export async function sendLeadToTelegram({ contact, userData, result }) {
     return true;
   } catch (err) {
     console.error('❌ Не удалось отправить лид:', err.message);
+    return false;
+  }
+}
+
+// ── Заявки на покупку с лендинга ──────────────────────────────────────────────
+const NOTIFY_TOKEN = process.env.REACT_APP_NOTIFY_TOKEN;
+const ADMIN_CHAT_ID = '981828628';
+
+export async function sendPurchaseIntent({ plan, contacts }) {
+  if (!NOTIFY_TOKEN) {
+    console.error('❌ REACT_APP_NOTIFY_TOKEN не задан');
+    return false;
+  }
+
+  // Форматируем дату в UTC+5
+  const now = new Date();
+  const offset = 5 * 60;
+  const local = new Date(now.getTime() + offset * 60 * 1000);
+  const dateStr = local.toISOString().replace('T', ' ').slice(0, 16) + ' (UTC+5)';
+
+  const text =
+`🛒 *Заявка на покупку с лендинга*
+
+📦 Продукт: *${plan.title}*
+💰 Цена: ${plan.price} ${plan.unit}
+
+👤 Контакты клиента:
+  📱 Telegram: ${contacts.telegram || '—'}
+  📞 Телефон: ${contacts.phone || '—'}
+  📧 Email: ${contacts.email || '—'}
+
+⏰ ${dateStr}`;
+
+  try {
+    const resp = await fetchWithTimeout(
+      `https://api.telegram.org/bot${NOTIFY_TOKEN}/sendMessage`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: ADMIN_CHAT_ID,
+          text,
+          parse_mode: 'Markdown',
+        }),
+      },
+      8000
+    );
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.description || `Telegram API error ${resp.status}`);
+    }
+
+    console.log('✅ Заявка на покупку отправлена в Telegram');
+    return true;
+  } catch (err) {
+    console.error('❌ Не удалось отправить заявку:', err.message);
     return false;
   }
 }
