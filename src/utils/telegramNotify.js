@@ -1,4 +1,5 @@
 const BOT_URL = '/api/notify-lead';
+const PURCHASE_URL = 'https://buteyko-api.bothost.tech/notify';
 
 // ── Метки полей ───────────────────────────────────────────────────────────────
 const QUESTION_LABELS = {
@@ -127,7 +128,6 @@ function translateValue(val) {
   return VALUE_LABELS[val] || val;
 }
 
-// Форматирует числовое значение шкалы в "05/10"
 function formatScale(value) {
   if (value === null || value === undefined || value === '') return '';
   const num = Number(value);
@@ -216,56 +216,26 @@ export async function sendLeadToTelegram({ contact, userData, result }) {
 }
 
 // ── Заявки на покупку с лендинга ──────────────────────────────────────────────
-const NOTIFY_TOKEN = process.env.REACT_APP_NOTIFY_TOKEN;
-const ADMIN_CHAT_ID = '981828628';
-
 export async function sendPurchaseIntent({ plan, contacts }) {
-  if (!NOTIFY_TOKEN) {
-    console.error('❌ REACT_APP_NOTIFY_TOKEN не задан');
-    return false;
-  }
-
-  // Форматируем дату в UTC+5
-  const now = new Date();
-  const offset = 5 * 60;
-  const local = new Date(now.getTime() + offset * 60 * 1000);
-  const dateStr = local.toISOString().replace('T', ' ').slice(0, 16) + ' (UTC+5)';
-
-  const text =
-`🛒 *Заявка на покупку с лендинга*
-
-📦 Продукт: *${plan.title}*
-💰 Цена: ${plan.price} ${plan.unit}
-
-👤 Контакты клиента:
-  📱 Telegram: ${contacts.telegram || '—'}
-  📞 Телефон: ${contacts.phone || '—'}
-  📧 Email: ${contacts.email || '—'}
-
-⏰ ${dateStr}`;
-
   try {
     const resp = await fetchWithTimeout(
-      `https://api.telegram.org/bot${NOTIFY_TOKEN}/sendMessage`,
+      PURCHASE_URL,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: ADMIN_CHAT_ID,
-          text,
-          parse_mode: 'Markdown',
-        }),
+        body: JSON.stringify({ plan, contacts }),
       },
       8000
     );
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
-      throw new Error(err.description || `Telegram API error ${resp.status}`);
+      throw new Error(err.error || `Proxy error ${resp.status}`);
     }
 
-    console.log('✅ Заявка на покупку отправлена в Telegram');
-    return true;
+    const data = await resp.json();
+    console.log('✅ Заявка на покупку отправлена через прокси', data);
+    return data.ok === true;
   } catch (err) {
     console.error('❌ Не удалось отправить заявку:', err.message);
     return false;
