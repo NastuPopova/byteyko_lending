@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Check, Send, MessageCircle } from 'lucide-react';
 import SectionTransition from './SectionTransition';
 import ContactForm from './ContactForm';
-
-const TELEGRAM_BOT = 'breathing_opros_bot';
+import PurchaseModal from './PurchaseModal';
 
 const plans = [
   {
@@ -23,7 +22,6 @@ const plans = [
       'Домашнее задание и личная обратная связь',
     ],
     cta: 'Записаться',
-    ctaKey: 'trial',
     highlight: false,
   },
   {
@@ -43,7 +41,6 @@ const plans = [
       'Ежедневное отслеживание КП — видите прогресс каждый день',
     ],
     cta: 'Записаться',
-    ctaKey: 'intensive',
     highlight: false,
   },
   {
@@ -64,22 +61,13 @@ const plans = [
       'Видеозаписи всех занятий',
     ],
     cta: 'Начать курс',
-    ctaKey: 'course',
     highlight: true,
   },
 ];
 
 const Products = () => {
   const [showFeedback, setShowFeedback] = useState(false);
-
-  const handleTelegramRedirect = (key) => {
-    const links = {
-      trial:     `https://t.me/${TELEGRAM_BOT}?start=websiteCtaTrial`,
-      intensive: `https://t.me/${TELEGRAM_BOT}?start=websiteCtaIntensive`,
-      course:    `https://t.me/${TELEGRAM_BOT}?start=websiteCtaCourse`,
-    };
-    window.open(links[key], '_blank');
-  };
+  const [modalPlan, setModalPlan] = useState(null);
 
   return (
     <section id="products" className="py-20 bg-gradient-to-b from-white to-primary-100">
@@ -143,7 +131,7 @@ const Products = () => {
                 </ul>
 
                 <button
-                  onClick={() => handleTelegramRedirect(plan.ctaKey)}
+                  onClick={() => setModalPlan(plan)}
                   className={`w-full font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors duration-300 ${
                     plan.highlight
                       ? 'bg-yellow-400 text-primary-900 hover:bg-yellow-300'
@@ -173,6 +161,14 @@ const Products = () => {
           </div>
         </div>
       </SectionTransition>
+
+      {/* Модальное окно покупки */}
+      {modalPlan && (
+        <PurchaseModal
+          initialPlan={modalPlan}
+          onClose={() => setModalPlan(null)}
+        />
+      )}
     </section>
   );
 };
