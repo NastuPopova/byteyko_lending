@@ -56,6 +56,71 @@ const plans = [
   },
 ];
 
+// ──── Диалог подтверждения закрытия ──────────────────────────────────────────
+const CloseConfirmDialog = ({ onStay, onExit }) => (
+  <div
+    style={{
+      position: 'absolute',
+      inset: 0,
+      zIndex: 10,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: '1.25rem',
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      backdropFilter: 'blur(2px)',
+    }}
+  >
+    <div style={{
+      background: '#fff',
+      borderRadius: '1rem',
+      boxShadow: '0 24px 64px rgba(0,0,0,0.18)',
+      margin: '1rem',
+      padding: '1.5rem',
+      maxWidth: '320px',
+      width: '100%',
+      textAlign: 'center',
+    }}>
+      <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>🤔</div>
+      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>
+        Уверены, что хотите выйти?
+      </h3>
+      <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1.25rem' }}>
+        Введённые данные не сохранятся
+      </p>
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button
+          onClick={onStay}
+          style={{
+            flex: 1, padding: '0.75rem', borderRadius: '10px',
+            border: '2px solid #059669', color: '#059669',
+            fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer',
+            background: '#fff', transition: 'background 150ms',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = '#f0fdf4'}
+          onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+        >
+          Остаться
+        </button>
+        <button
+          onClick={onExit}
+          style={{
+            flex: 1, padding: '0.75rem', borderRadius: '10px',
+            border: 'none', background: '#f3f4f6', color: '#374151',
+            fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer',
+            transition: 'background 150ms',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = '#e5e7eb'}
+          onMouseLeave={e => e.currentTarget.style.background = '#f3f4f6'}
+        >
+          Выйти
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// ──── Основной компонент ──────────────────────────────────────────────────────
 const PurchaseModal = ({ initialPlan, onClose }) => {
   const [step, setStep] = useState(STEPS.CONFIRM);
   const [selectedPlan, setSelectedPlan] = useState(
@@ -65,6 +130,7 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
   const [error, setError] = useState('');
   const [form, setForm] = useState({ telegram: '', phone: '', email: '' });
   const [visible, setVisible] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Анимация появления
   useEffect(() => {
@@ -74,18 +140,48 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
 
   // Блокировка скролла страницы
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+    const scrollY = window.scrollY;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    document.body.style.overflowY = 'scroll';
+    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflowY = '';
+      document.body.style.paddingRight = '';
+      window.scrollTo(0, scrollY);
+    };
   }, []);
 
   // Закрытие по Escape
   useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape' && step !== STEPS.SUCCESS) handleClose(); };
+    const handler = (e) => {
+      if (e.key === 'Escape') {
+        if (showConfirm) {
+          setShowConfirm(false);
+        } else if (step !== STEPS.SUCCESS) {
+          handleCloseRequest();
+        }
+      }
+    };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [step]);
+  }, [step, showConfirm]);
 
-  const handleClose = () => {
+  // Запрос закрытия — показываем подтверждение если не SUCCESS
+  const handleCloseRequest = () => {
+    if (step === STEPS.SUCCESS) {
+      doClose();
+    } else {
+      setShowConfirm(true);
+    }
+  };
+
+  const doClose = () => {
     setVisible(false);
     setTimeout(onClose, 250);
   };
@@ -135,8 +231,19 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
   };
 
   return (
-    <div style={overlayStyle} onClick={(e) => { if (e.target === e.currentTarget && step !== STEPS.SUCCESS) handleClose(); }}>
+    <div
+      style={overlayStyle}
+      onClick={(e) => { if (e.target === e.currentTarget) handleCloseRequest(); }}
+    >
       <div style={modalStyle}>
+
+        {/* Диалог подтверждения выхода */}
+        {showConfirm && (
+          <CloseConfirmDialog
+            onStay={() => setShowConfirm(false)}
+            onExit={() => { setShowConfirm(false); doClose(); }}
+          />
+        )}
 
         {/* Шапка */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem 1.5rem', borderBottom: '1px solid #f0f0f0' }}>
@@ -152,7 +259,7 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
           </div>
           {step !== STEPS.SUCCESS && (
             <button
-              onClick={handleClose}
+              onClick={handleCloseRequest}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#9ca3af', borderRadius: '6px', display: 'flex', alignItems: 'center' }}
               aria-label="Закрыть"
             >
@@ -166,7 +273,6 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
           {/* ШАГ 1: Выбор продукта */}
           {step === STEPS.CONFIRM && (
             <div>
-              {/* Таббар переключения продуктов */}
               <div style={{ display: 'flex', gap: '6px', marginBottom: '1.25rem', background: '#f3f4f6', borderRadius: '10px', padding: '4px' }}>
                 {plans.map(p => (
                   <button
@@ -191,7 +297,6 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
                 ))}
               </div>
 
-              {/* Карточка выбранного продукта */}
               <div style={{ background: '#f0fdf4', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.25rem', border: '1px solid #d1fae5' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
                   <h4 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#111827', margin: 0 }}>{selectedPlan.title}</h4>
@@ -210,7 +315,6 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
                 </div>
               </div>
 
-              {/* Список включённого */}
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1.5rem 0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {selectedPlan.features.map((f, i) => (
                   <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.875rem', color: '#374151' }}>
@@ -244,7 +348,6 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
                 Оставьте контакты — я свяжусь с вами, чтобы подтвердить занятие и договориться об оплате.
               </p>
 
-              {/* Напоминание выбранного продукта */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f9fafb', borderRadius: '8px', padding: '10px 14px', marginBottom: '1.25rem', border: '1px solid #e5e7eb' }}>
                 <div>
                   <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>Выбранный продукт</div>
@@ -253,7 +356,6 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
                 <div style={{ fontSize: '1rem', fontWeight: 700, color: '#059669' }}>{selectedPlan.price} {selectedPlan.unit}</div>
               </div>
 
-              {/* Поля формы */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
@@ -314,14 +416,12 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
                 </div>
               </div>
 
-              {/* Ошибка */}
               {error && (
                 <div style={{ fontSize: '0.8rem', color: '#ef4444', marginBottom: '0.75rem', padding: '8px 12px', background: '#fef2f2', borderRadius: '6px', border: '1px solid #fecaca' }}>
                   ⚠️ {error}
                 </div>
               )}
 
-              {/* Кнопки */}
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button
                   type="button"
@@ -373,7 +473,7 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
                 Я свяжусь с вами в Telegram в ближайшее время для подтверждения.
               </p>
               <button
-                onClick={handleClose}
+                onClick={doClose}
                 style={{
                   width: '100%', padding: '0.875rem', borderRadius: '12px',
                   background: '#10b981', color: '#fff', fontWeight: 700,
@@ -390,7 +490,6 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
         </div>
       </div>
 
-      {/* Анимация спиннера */}
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
