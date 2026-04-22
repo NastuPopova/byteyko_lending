@@ -1,4 +1,4 @@
-const BOT_URL = '/api/notify-lead';
+const BOT_URL = 'https://buteyko-api.bothost.tech/notify-lead';
 const PURCHASE_URL = 'https://buteyko-api.bothost.tech/notify';
 
 // ── Метки полей ───────────────────────────────────────────────────────────────
@@ -206,8 +206,8 @@ export async function sendLeadToTelegram({ contact, userData, result }) {
       8000
     );
 
-    if (!resp.ok) throw new Error(`Netlify function ответила ${resp.status}`);
-    console.log('✅ Лид отправлен через Netlify Function');
+    if (!resp.ok) throw new Error(`Proxy ответил ${resp.status}`);
+    console.log('✅ Лид отправлен через Bothost Proxy');
     return true;
   } catch (err) {
     console.error('❌ Не удалось отправить лид:', err.message);
