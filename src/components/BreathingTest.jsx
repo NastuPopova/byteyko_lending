@@ -97,7 +97,6 @@ const ContactScreen = ({ onNext, onClose }) => {
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1">
             Email <span className="text-red-500">*</span>
-            <span className="text-gray-400 font-normal ml-1">(или телефон)</span>
           </label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
