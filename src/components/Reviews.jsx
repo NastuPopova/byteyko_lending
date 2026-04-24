@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Quote, X, ChevronLeft, ChevronRight, CheckCircle, MessageCircle, Star, ThumbsUp } from 'lucide-react';
+import { Quote, X, ChevronLeft, ChevronRight, CheckCircle, MessageCircle, Star } from 'lucide-react';
 
 const PROXY_URL = 'https://buteyko-api.bothost.tech';
 
@@ -10,39 +10,44 @@ const initialReviews = [
     rating: 5,
     content: `Хочу оставить отзыв о прохождении курса техники дыхания у Александра. Раньше постоянно боролась с тревогой. Техники дыхания, которые я изучила на курсе, оказались простыми, но невероятно эффективными.`,
     fullContent: `Хочу оставить отзыв о прохождении курса техники дыхания у Александра. Раньше постоянно боролась с тревогой. Техники дыхания, которые я изучила на курсе, оказались простыми, но невероятно эффективными. Научившись правильно дышать, я почувствовала значительное облегчение. Научилась справляться с тревожностью. Каждый урок наполнен полезной информацией и практическими упражнениями, которые я смогу применять в повседневной жизни. Теперь я могу управлять своим состоянием.`,
-    results: { 'улучшение сна': '80%', 'снижение стресса': '65%', 'повышение энергии': '70%' },
-    date: '9 февраля 2024',
+    conditions: ['Панические атаки / тревожность'],
+    date: '9 марта 2026',
     avatar: `${process.env.PUBLIC_URL}/reviews/luba.jpg`,
-    likes: 24,
-    courseDuration: '2 месяца'
   },
   {
     name: 'Александра',
-    telegramUsername: '@alex_iv',
-    rating: 4,
+    telegramUsername: '',
+    rating: 5,
     content: `Методику правильного дыхания, освоила совсем недавно! Благодаря Александру, я узнала технику правильного дыхания, благотворное влияние на организм!`,
     fullContent: `Методику правильного дыхания, освоила совсем недавно! Благодаря Александру, я узнала технику правильного дыхания, благотворное влияние на организм! Из видимых результатов, я вылечила аллергию на животных, от которой страдала всю жизнь, стала лучше себя чувствовать, навсегда забыла про головные боли! Спасибо огромное за упражнения!`,
-    results: { 'улучшение сна': '90%', 'снижение стресса': '85%', 'повышение энергии': '80%' },
+    conditions: ['Аллергия'],
     date: '15 марта 2024',
     avatar: `${process.env.PUBLIC_URL}/reviews/ALEXENDRA.jpg`,
-    likes: 18,
-    courseDuration: '1 месяц'
   },
   {
-    name: 'Дмитрий',
-    telegramUsername: '@dim_sok',
+    name: 'Анастасия',
+    telegramUsername: '@NastuBardin',
     rating: 5,
-    content: `Никогда не думал, что правильное дыхание может так сильно повлиять на качество жизни. После курса я заметил значительное улучшение в своей физической форме и выносливости.`,
-    fullContent: `Никогда не думал, что правильное дыхание может так сильно повлиять на качество жизни. После курса я заметил значительное улучшение в своей физической форме и выносливости. Особенно помогает при занятиях спортом. Техники, которым научил Александр, действительно работают.`,
-    results: { 'улучшение сна': '40%', 'снижение стресса': '75%', 'повышение энергии': '60%' },
-    date: '1 марта 2024',
+    content: `Занятия очень понравились. Конечно нужна регулярность и дисциплина чтобы был результат.`,
+    fullContent: `Занятия очень понравились. Конечно нужна регулярность и дисциплина чтобы был результат.`,
+    conditions: [],
+    date: '24 апреля 2026',
     avatar: null,
-    likes: 15,
-    courseDuration: '3 месяца'
-  }
+  },
 ];
 
 // ─── Форма отзыва ───────────────────────────────────────────────────────────
+const CONDITION_OPTIONS = [
+  'Бронхиальная астма',
+  'Аллергия',
+  'Гипертония',
+  'Панические атаки / тревожность',
+  'Хроническая усталость',
+  'Частые ОРВИ',
+  'Нарушение сна',
+  'Другое',
+];
+
 const ReviewForm = ({ onSubmit, onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -50,8 +55,17 @@ const ReviewForm = ({ onSubmit, onClose }) => {
     telegramUsername: '',
     rating: 5,
     content: '',
-    results: { 'улучшение сна': '0', 'снижение стресса': '0', 'повышение энергии': '0' }
+    conditions: [],
   });
+
+  const toggleCondition = (item) => {
+    setFormData((prev) => ({
+      ...prev,
+      conditions: prev.conditions.includes(item)
+        ? prev.conditions.filter((c) => c !== item)
+        : [...prev.conditions, item],
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -60,36 +74,23 @@ const ReviewForm = ({ onSubmit, onClose }) => {
       return;
     }
     setIsSubmitting(true);
-
     try {
       const tg = formData.telegramUsername.trim();
       const payload = {
         name: formData.name.trim(),
-        telegramUsername: tg
-          ? (tg.startsWith('@') ? tg : `@${tg}`)
-          : '',
+        telegramUsername: tg ? (tg.startsWith('@') ? tg : `@${tg}`) : '',
         rating: formData.rating,
         content: formData.content.trim(),
-        results: {
-          'улучшение сна':     `${formData.results['улучшение сна']}%`,
-          'снижение стресса':  `${formData.results['снижение стресса']}%`,
-          'повышение энергии': `${formData.results['повышение энергии']}%`,
-        }
+        conditions: formData.conditions,
       };
-
       const res = await fetch(`${PROXY_URL}/submit-review`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-
-      if (data.ok) {
-        onSubmit();
-        onClose();
-      } else {
-        alert('Ошибка при отправке. Попробуйте ещё раз.');
-      }
+      if (data.ok) { onSubmit(); onClose(); }
+      else alert('Ошибка при отправке. Попробуйте ещё раз.');
     } catch (_) {
       alert('Ошибка соединения. Проверьте интернет.');
     } finally {
@@ -99,18 +100,14 @@ const ReviewForm = ({ onSubmit, onClose }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-
       {/* Имя */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Имя *</label>
-        <input
-          type="text"
-          value={formData.name}
+        <input type="text" value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           placeholder="Как вас зовут?"
           className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
-          required
-        />
+          required />
       </div>
 
       {/* Telegram */}
@@ -121,13 +118,10 @@ const ReviewForm = ({ onSubmit, onClose }) => {
             необязательно, но повышает доверие
           </span>
         </label>
-        <input
-          type="text"
-          value={formData.telegramUsername}
+        <input type="text" value={formData.telegramUsername}
           onChange={(e) => setFormData({ ...formData, telegramUsername: e.target.value })}
           placeholder="@ваш_ник"
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
-        />
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200" />
         <p className="text-xs text-gray-400 mt-1">Посетители смогут убедиться, что вы реальный человек</p>
       </div>
 
@@ -143,73 +137,56 @@ const ReviewForm = ({ onSubmit, onClose }) => {
         </div>
       </div>
 
-      {/* Текст отзыва */}
+      {/* Текст */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Ваш отзыв *</label>
-        <textarea
-          value={formData.content}
+        <textarea value={formData.content}
           onChange={(e) => setFormData({ ...formData, content: e.target.value })}
           placeholder="Расскажите о своём опыте..."
           className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 h-32"
-          required
-        />
+          required />
       </div>
 
-      {/* Результаты */}
-      <div className="space-y-4">
-        <label className="block text-sm font-medium text-gray-700">Оцените результаты (в процентах)</label>
-        <div className="grid gap-4">
-          {Object.entries(formData.results).map(([key, value]) => (
-            <div key={key} className="flex items-center gap-4">
-              <label className="text-sm text-gray-600 flex-1">{key}</label>
-              <input
-                type="number" min="0" max="100" value={value}
-                onChange={(e) => setFormData({ ...formData, results: { ...formData.results, [key]: e.target.value } })}
-                className="w-24 px-4 py-2 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
-              />
-              <span className="text-sm text-gray-500">%</span>
-            </div>
+      {/* С чем пришли */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3">С чем вы пришли? <span className="font-normal text-gray-400">(необязательно)</span></label>
+        <div className="flex flex-wrap gap-2">
+          {CONDITION_OPTIONS.map((item) => (
+            <button key={item} type="button" onClick={() => toggleCondition(item)}
+              className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                formData.conditions.includes(item)
+                  ? 'bg-teal-600 text-white border-teal-600'
+                  : 'bg-white text-gray-600 border-gray-300 hover:border-teal-400'
+              }`}>
+              {item}
+            </button>
           ))}
         </div>
       </div>
 
       {/* Кнопка */}
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-60"
-      >
+      <button type="submit" disabled={isSubmitting}
+        className="w-full bg-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-60">
         {isSubmitting ? 'Отправка...' : 'Опубликовать отзыв'}
       </button>
-
-      <p className="text-xs text-gray-400 text-center">
-        ℹ️ Отзыв появится на сайте после проверки модератором
-      </p>
+      <p className="text-xs text-gray-400 text-center">ℹ️ Отзыв появится на сайте после проверки модератором</p>
     </form>
   );
 };
 
-// ─── Аватар (переиспользуемый) ────────────────────────────────────────────────
+// ─── Аватар ───────────────────────────────────────────────────────────────────
 const Avatar = ({ review, size = 'md' }) => {
-  const sizeClass = size === 'lg'
-    ? 'w-16 h-16 text-2xl'
-    : 'w-14 h-14 text-xl';
-
+  const sizeClass = size === 'lg' ? 'w-16 h-16 text-2xl' : 'w-14 h-14 text-xl';
   if (review.avatar) {
     return (
       <div className={`${sizeClass} rounded-full overflow-hidden flex-shrink-0`}>
-        <img
-          src={review.avatar}
-          alt={`Аватар ${review.name}`}
-          className="w-full h-full object-cover"
+        <img src={review.avatar} alt={`Аватар ${review.name}`} className="w-full h-full object-cover"
           onError={(e) => {
             e.target.parentNode.innerHTML = `<div class="${sizeClass} rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center font-bold text-white">${review.name[0]}</div>`;
-          }}
-        />
+          }} />
       </div>
     );
   }
-
   return (
     <div className={`${sizeClass} rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center font-bold text-white flex-shrink-0`}>
       {review.name[0]}
@@ -217,7 +194,7 @@ const Avatar = ({ review, size = 'md' }) => {
   );
 };
 
-// ─── Карточка отзыва ─────────────────────────────────────────────────────────
+// ─── Карточка отзыва ──────────────────────────────────────────────────────────
 const ReviewCard = ({ review, onClick }) => {
   const tgHandle = review.telegramUsername
     ? (review.telegramUsername.startsWith('@') ? review.telegramUsername : `@${review.telegramUsername}`)
@@ -231,15 +208,10 @@ const ReviewCard = ({ review, onClick }) => {
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">{review.name}</h3>
             {tgHandle && (
-              <a
-                href={`https://t.me/${tgHandle.replace('@', '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <a href={`https://t.me/${tgHandle.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="text-xs text-teal-600 hover:text-teal-700 flex items-center gap-1 transition-colors"
-              >
-                <MessageCircle className="h-3 w-3" />
-                {tgHandle}
+                className="text-xs text-teal-600 hover:text-teal-700 flex items-center gap-1 transition-colors">
+                <MessageCircle className="h-3 w-3" />{tgHandle}
               </a>
             )}
           </div>
@@ -247,31 +219,26 @@ const ReviewCard = ({ review, onClick }) => {
             {[...Array(5)].map((_, i) => (
               <Star key={i} className={`h-3 w-3 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
             ))}
-            {review.courseDuration && <span className="text-xs text-gray-500 ml-2">• {review.courseDuration}</span>}
           </div>
         </div>
       </div>
 
       <p className="text-gray-600 text-sm line-clamp-4 mb-4 flex-grow">{review.content}</p>
 
-      {review.results && (
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          {Object.entries(review.results).map(([key, value]) => (
-            <div key={key} className="bg-teal-50 rounded-lg p-2 text-center">
-              <div className="text-base font-bold text-teal-700">{value}</div>
-              <div className="text-xs text-teal-600">{key}</div>
-            </div>
+      {/* Теги условий */}
+      {review.conditions && review.conditions.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {review.conditions.map((c) => (
+            <span key={c} className="text-xs bg-teal-50 text-teal-700 border border-teal-100 px-2.5 py-1 rounded-full">
+              {c}
+            </span>
           ))}
         </div>
       )}
 
       <div className="mt-auto pt-4 flex justify-between items-center border-t border-gray-100">
         <span className="text-teal-600 text-xs font-medium">Нажмите, чтобы прочитать полностью</span>
-        {review.likes && (
-          <div className="flex items-center gap-1 text-gray-500">
-            <ThumbsUp className="h-4 w-4" /><span className="text-xs">{review.likes}</span>
-          </div>
-        )}
+        {review.date && <span className="text-xs text-gray-400">{review.date}</span>}
       </div>
     </div>
   );
@@ -287,14 +254,11 @@ const Reviews = () => {
   const [displayedReviews, setDisplayedReviews] = useState(3);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  // Загружаем одобренные отзывы с прокси
   useEffect(() => {
     fetch(`${PROXY_URL}/get-reviews`)
       .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) setReviews(data);
-      })
-      .catch(() => {}); // при ошибке показываем initialReviews
+      .then((data) => { if (Array.isArray(data) && data.length > 0) setReviews(data); })
+      .catch(() => {});
   }, []);
 
   const showNext = () => { if (!isAnimating) { setIsAnimating(true); setCurrentIndex((prev) => (prev + 1) % reviews.length); } };
@@ -312,7 +276,6 @@ const Reviews = () => {
   return (
     <section id="reviews" className="py-20 bg-gradient-to-b from-primary-100 to-white">
 
-      {/* Тост об успехе */}
       {showSuccessMessage && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-xl shadow-xl z-50 animate-fade-in-down max-w-sm">
           <div className="flex items-start gap-3">
@@ -332,7 +295,7 @@ const Reviews = () => {
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">Реальные истории людей, которые изменили свою жизнь с помощью правильного дыхания</p>
         </div>
 
-        {/* Десктоп — сетка */}
+        {/* Десктоп */}
         <div className="hidden md:block">
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
             {reviews.slice(0, displayedReviews).map((review, index) => (
@@ -387,12 +350,9 @@ const Reviews = () => {
                   <div className="ml-4">
                     <h3 className="text-xl font-semibold text-gray-900">{selectedReview.name}</h3>
                     {selectedReview.telegramUsername && (
-                      <a
-                        href={`https://t.me/${selectedReview.telegramUsername.replace('@', '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-1 mt-1"
-                      >
+                      <a href={`https://t.me/${selectedReview.telegramUsername.replace('@', '')}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-1 mt-1">
                         <MessageCircle className="h-4 w-4" />
                         {selectedReview.telegramUsername.startsWith('@') ? selectedReview.telegramUsername : `@${selectedReview.telegramUsername}`}
                       </a>
@@ -400,13 +360,20 @@ const Reviews = () => {
                     {selectedReview.date && <p className="text-gray-500 text-sm mt-1">{selectedReview.date}</p>}
                   </div>
                 </div>
-                <p className="text-gray-600 whitespace-pre-line">{selectedReview.fullContent || selectedReview.content}</p>
+                <p className="text-gray-600 whitespace-pre-line mb-4">{selectedReview.fullContent || selectedReview.content}</p>
+                {selectedReview.conditions && selectedReview.conditions.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-4">
+                    {selectedReview.conditions.map((c) => (
+                      <span key={c} className="text-xs bg-teal-50 text-teal-700 border border-teal-100 px-2.5 py-1 rounded-full">{c}</span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         )}
 
-        {/* CTA + кнопка */}
+        {/* CTA */}
         <div className="mt-16 text-center space-y-6">
           <div className="inline-block bg-teal-100 text-teal-800 px-6 py-3 rounded-full font-medium text-lg">Более 50 успешных учеников</div>
           <div>
