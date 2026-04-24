@@ -189,6 +189,34 @@ const ReviewForm = ({ onSubmit, onClose }) => {
   );
 };
 
+// ─── Аватар (переиспользуемый) ────────────────────────────────────────────────
+const Avatar = ({ review, size = 'md' }) => {
+  const sizeClass = size === 'lg'
+    ? 'w-16 h-16 text-2xl'
+    : 'w-14 h-14 text-xl';
+
+  if (review.avatar) {
+    return (
+      <div className={`${sizeClass} rounded-full overflow-hidden flex-shrink-0`}>
+        <img
+          src={review.avatar}
+          alt={`Аватар ${review.name}`}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.parentNode.innerHTML = `<div class="${sizeClass} rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center font-bold text-white">${review.name[0]}</div>`;
+          }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${sizeClass} rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center font-bold text-white flex-shrink-0`}>
+      {review.name[0]}
+    </div>
+  );
+};
+
 // ─── Карточка отзыва ─────────────────────────────────────────────────────────
 const ReviewCard = ({ review, onClick }) => {
   const tgHandle = review.telegramUsername
@@ -198,18 +226,7 @@ const ReviewCard = ({ review, onClick }) => {
   return (
     <div onClick={onClick} className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 h-full flex flex-col">
       <div className="flex items-center mb-4">
-        <div className="relative">
-          {review.avatar ? (
-            <div className="w-14 h-14 rounded-full overflow-hidden">
-              <img src={review.avatar} alt={`Аватар ${review.name}`} className="w-full h-full object-cover"
-                onError={(e) => { e.target.style.display = 'none'; }} />
-            </div>
-          ) : (
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center">
-              <span className="text-xl font-bold text-white">{review.name[0]}</span>
-            </div>
-          )}
-        </div>
+        <Avatar review={review} size="md" />
         <div className="ml-3 flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">{review.name}</h3>
@@ -366,7 +383,7 @@ const Reviews = () => {
               <button onClick={() => setSelectedReview(null)} className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full"><X className="h-6 w-6 text-gray-500" /></button>
               <div className="p-8">
                 <div className="flex items-center mb-6">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-2xl font-bold text-white">{selectedReview.name[0]}</div>
+                  <Avatar review={selectedReview} size="lg" />
                   <div className="ml-4">
                     <h3 className="text-xl font-semibold text-gray-900">{selectedReview.name}</h3>
                     {selectedReview.telegramUsername && (
