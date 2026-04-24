@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Quote, X, ChevronLeft, ChevronRight, CheckCircle, MessageCircle, Star, ThumbsUp, Shield } from 'lucide-react';
+import { Quote, X, ChevronLeft, ChevronRight, CheckCircle, MessageCircle, Star, ThumbsUp } from 'lucide-react';
 
 const PROXY_URL = 'https://buteyko-api.bothost.tech';
 
 const initialReviews = [
   {
     name: 'Любовь',
-    surname: '',
-    verified: true,
     telegramUsername: '@Liybov_Bardina',
     rating: 5,
     content: `Хочу оставить отзыв о прохождении курса техники дыхания у Александра. Раньше постоянно боролась с тревогой. Техники дыхания, которые я изучила на курсе, оказались простыми, но невероятно эффективными.`,
@@ -15,14 +13,11 @@ const initialReviews = [
     results: { 'улучшение сна': '80%', 'снижение стресса': '65%', 'повышение энергии': '70%' },
     date: '9 февраля 2024',
     avatar: `${process.env.PUBLIC_URL}/reviews/luba.jpg`,
-    image: '',
     likes: 24,
     courseDuration: '2 месяца'
   },
   {
     name: 'Александра',
-    surname: '',
-    verified: true,
     telegramUsername: '@alex_iv',
     rating: 4,
     content: `Методику правильного дыхания, освоила совсем недавно! Благодаря Александру, я узнала технику правильного дыхания, благотворное влияние на организм!`,
@@ -30,14 +25,11 @@ const initialReviews = [
     results: { 'улучшение сна': '90%', 'снижение стресса': '85%', 'повышение энергии': '80%' },
     date: '15 марта 2024',
     avatar: `${process.env.PUBLIC_URL}/reviews/ALEXENDRA.jpg`,
-    image: '',
     likes: 18,
     courseDuration: '1 месяц'
   },
   {
     name: 'Дмитрий',
-    surname: '',
-    verified: true,
     telegramUsername: '@dim_sok',
     rating: 5,
     content: `Никогда не думал, что правильное дыхание может так сильно повлиять на качество жизни. После курса я заметил значительное улучшение в своей физической форме и выносливости.`,
@@ -45,17 +37,17 @@ const initialReviews = [
     results: { 'улучшение сна': '40%', 'снижение стресса': '75%', 'повышение энергии': '60%' },
     date: '1 марта 2024',
     avatar: null,
-    image: '',
     likes: 15,
     courseDuration: '3 месяца'
   }
 ];
 
-// ─── Форма отзыва (без верификации) ───
+// ─── Форма отзыва ───────────────────────────────────────────────────────────
 const ReviewForm = ({ onSubmit, onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
+    telegramUsername: '',
     rating: 5,
     content: '',
     results: { 'улучшение сна': '0', 'снижение стресса': '0', 'повышение энергии': '0' }
@@ -70,10 +62,14 @@ const ReviewForm = ({ onSubmit, onClose }) => {
     setIsSubmitting(true);
 
     try {
+      const tg = formData.telegramUsername.trim();
       const payload = {
-        name: formData.name,
+        name: formData.name.trim(),
+        telegramUsername: tg
+          ? (tg.startsWith('@') ? tg : `@${tg}`)
+          : '',
         rating: formData.rating,
-        content: formData.content,
+        content: formData.content.trim(),
         results: {
           'улучшение сна':     `${formData.results['улучшение сна']}%`,
           'снижение стресса':  `${formData.results['снижение стресса']}%`,
@@ -115,6 +111,24 @@ const ReviewForm = ({ onSubmit, onClose }) => {
           className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
           required
         />
+      </div>
+
+      {/* Telegram */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Telegram
+          <span className="ml-2 text-xs font-normal text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">
+            необязательно, но повышает доверие
+          </span>
+        </label>
+        <input
+          type="text"
+          value={formData.telegramUsername}
+          onChange={(e) => setFormData({ ...formData, telegramUsername: e.target.value })}
+          placeholder="@ваш_ник"
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
+        />
+        <p className="text-xs text-gray-400 mt-1">Посетители смогут убедиться, что вы реальный человек</p>
       </div>
 
       {/* Оценка */}
@@ -175,68 +189,80 @@ const ReviewForm = ({ onSubmit, onClose }) => {
   );
 };
 
-// ─── Карточка отзыва ───
-const ReviewCard = ({ review, onClick, onImageClick }) => (
-  <div onClick={onClick} className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 h-full flex flex-col">
-    <div className="flex items-center mb-4">
-      <div className="relative">
-        {review.avatar ? (
-          <div className="w-14 h-14 rounded-full overflow-hidden">
-            <img src={review.avatar} alt={`Аватар ${review.name}`} className="w-full h-full object-cover"
-              onError={(e) => { e.target.src = `${process.env.PUBLIC_URL}/images/default-avatar.jpg`; }} />
-          </div>
-        ) : (
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center">
-            <span className="text-xl font-bold text-white">{review.name[0]}</span>
-          </div>
-        )}
-        {review.verified && (
-          <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1 shadow-lg">
-            <CheckCircle className="h-3 w-3 text-white" />
-          </div>
-        )}
-      </div>
-      <div className="ml-3 flex-1">
-        <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-          {review.name}
-          {review.verified && (
-            <span className="text-xs text-teal-600 flex items-center">
-              <MessageCircle className="h-3 w-3 mr-1" />{review.telegramUsername}
-            </span>
+// ─── Карточка отзыва ─────────────────────────────────────────────────────────
+const ReviewCard = ({ review, onClick }) => {
+  const tgHandle = review.telegramUsername
+    ? (review.telegramUsername.startsWith('@') ? review.telegramUsername : `@${review.telegramUsername}`)
+    : null;
+
+  return (
+    <div onClick={onClick} className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 h-full flex flex-col">
+      <div className="flex items-center mb-4">
+        <div className="relative">
+          {review.avatar ? (
+            <div className="w-14 h-14 rounded-full overflow-hidden">
+              <img src={review.avatar} alt={`Аватар ${review.name}`} className="w-full h-full object-cover"
+                onError={(e) => { e.target.style.display = 'none'; }} />
+            </div>
+          ) : (
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center">
+              <span className="text-xl font-bold text-white">{review.name[0]}</span>
+            </div>
           )}
-        </h3>
-        <div className="flex items-center mt-1">
-          {[...Array(5)].map((_, i) => (
-            <Star key={i} className={`h-3 w-3 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
-          ))}
-          {review.courseDuration && <span className="text-xs text-gray-500 ml-2">• {review.courseDuration}</span>}
+        </div>
+        <div className="ml-3 flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-base font-semibold text-gray-900">{review.name}</h3>
+            {tgHandle && (
+              <a
+                href={`https://t.me/${tgHandle.replace('@', '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="text-xs text-teal-600 hover:text-teal-700 flex items-center gap-1 transition-colors"
+              >
+                <MessageCircle className="h-3 w-3" />
+                {tgHandle}
+              </a>
+            )}
+          </div>
+          <div className="flex items-center mt-1">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className={`h-3 w-3 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
+            ))}
+            {review.courseDuration && <span className="text-xs text-gray-500 ml-2">• {review.courseDuration}</span>}
+          </div>
         </div>
       </div>
-    </div>
-    <p className="text-gray-600 text-sm line-clamp-4 mb-4 flex-grow">{review.content}</p>
-    {review.results && (
-      <div className="grid grid-cols-2 gap-2 mb-4">
-        {Object.entries(review.results).map(([key, value]) => (
-          <div key={key} className="bg-teal-50 rounded-lg p-2 text-center">
-            <div className="text-base font-bold text-teal-700">{value}</div>
-            <div className="text-xs text-teal-600">{key}</div>
-          </div>
-        ))}
-      </div>
-    )}
-    <div className="mt-auto pt-4 flex justify-between items-center border-t border-gray-100">
-      <span className="text-teal-600 text-xs font-medium">Нажмите, чтобы прочитать полностью</span>
-      <div className="flex items-center gap-3">
-        <button className="flex items-center gap-1 text-gray-500 hover:text-teal-600 transition-colors">
-          <ThumbsUp className="h-4 w-4" /><span className="text-xs">{review.likes}</span>
-        </button>
-      </div>
-    </div>
-  </div>
-);
 
-// ─── Главный компонент ───
+      <p className="text-gray-600 text-sm line-clamp-4 mb-4 flex-grow">{review.content}</p>
+
+      {review.results && (
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          {Object.entries(review.results).map(([key, value]) => (
+            <div key={key} className="bg-teal-50 rounded-lg p-2 text-center">
+              <div className="text-base font-bold text-teal-700">{value}</div>
+              <div className="text-xs text-teal-600">{key}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-auto pt-4 flex justify-between items-center border-t border-gray-100">
+        <span className="text-teal-600 text-xs font-medium">Нажмите, чтобы прочитать полностью</span>
+        {review.likes && (
+          <div className="flex items-center gap-1 text-gray-500">
+            <ThumbsUp className="h-4 w-4" /><span className="text-xs">{review.likes}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ─── Главный компонент ────────────────────────────────────────────────────────
 const Reviews = () => {
+  const [reviews, setReviews] = useState(initialReviews);
   const [selectedReview, setSelectedReview] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -244,7 +270,15 @@ const Reviews = () => {
   const [displayedReviews, setDisplayedReviews] = useState(3);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  const reviews = initialReviews;
+  // Загружаем одобренные отзывы с прокси
+  useEffect(() => {
+    fetch(`${PROXY_URL}/get-reviews`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setReviews(data);
+      })
+      .catch(() => {}); // при ошибке показываем initialReviews
+  }, []);
 
   const showNext = () => { if (!isAnimating) { setIsAnimating(true); setCurrentIndex((prev) => (prev + 1) % reviews.length); } };
   const showPrev = () => { if (!isAnimating) { setIsAnimating(true); setCurrentIndex((prev) => (prev - 1 + reviews.length) % reviews.length); } };
@@ -285,7 +319,7 @@ const Reviews = () => {
         <div className="hidden md:block">
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
             {reviews.slice(0, displayedReviews).map((review, index) => (
-              <ReviewCard key={index} review={review} onClick={() => setSelectedReview(review)} onImageClick={() => {}} />
+              <ReviewCard key={review.id || index} review={review} onClick={() => setSelectedReview(review)} />
             ))}
           </div>
           <div className="mt-12 text-center">
@@ -308,8 +342,8 @@ const Reviews = () => {
           <div className="overflow-hidden">
             <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
               {reviews.map((review, index) => (
-                <div key={index} className="w-full flex-shrink-0 px-4">
-                  <ReviewCard review={review} onClick={() => setSelectedReview(review)} onImageClick={() => {}} />
+                <div key={review.id || index} className="w-full flex-shrink-0 px-4">
+                  <ReviewCard review={review} onClick={() => setSelectedReview(review)} />
                 </div>
               ))}
             </div>
@@ -333,9 +367,23 @@ const Reviews = () => {
               <div className="p-8">
                 <div className="flex items-center mb-6">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-2xl font-bold text-white">{selectedReview.name[0]}</div>
-                  <div className="ml-4"><h3 className="text-xl font-semibold text-gray-900">{selectedReview.name}</h3><p className="text-gray-600">{selectedReview.date}</p></div>
+                  <div className="ml-4">
+                    <h3 className="text-xl font-semibold text-gray-900">{selectedReview.name}</h3>
+                    {selectedReview.telegramUsername && (
+                      <a
+                        href={`https://t.me/${selectedReview.telegramUsername.replace('@', '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-1 mt-1"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        {selectedReview.telegramUsername.startsWith('@') ? selectedReview.telegramUsername : `@${selectedReview.telegramUsername}`}
+                      </a>
+                    )}
+                    {selectedReview.date && <p className="text-gray-500 text-sm mt-1">{selectedReview.date}</p>}
+                  </div>
                 </div>
-                <p className="text-gray-600 whitespace-pre-line">{selectedReview.fullContent}</p>
+                <p className="text-gray-600 whitespace-pre-line">{selectedReview.fullContent || selectedReview.content}</p>
               </div>
             </div>
           </div>
