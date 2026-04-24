@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Clean old build
+        run: rm -rf build
+
       - name: Build
         run: npm run build
         env:
