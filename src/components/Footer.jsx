@@ -3,6 +3,7 @@ import { Phone, Mail, MessageCircle } from 'lucide-react';
 
 const Footer = () => {
   const [showPhone, setShowPhone] = useState(false);
+  const [showTelegram, setShowTelegram] = useState(false);
 
   return (
     <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-white py-16">
@@ -40,20 +41,30 @@ const Footer = () => {
                 </div>
               </button>
 
-              <a
-                href="https://t.me/AS_Popov87"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 text-gray-300 hover:text-white transition-colors duration-200 group"
+              <button
+                onClick={() => setShowTelegram(!showTelegram)}
+                className="flex items-center gap-3 text-gray-300 hover:text-white transition-colors duration-200 group w-full text-left"
               >
                 <div className="bg-blue-500 p-3 rounded-lg group-hover:bg-blue-600 transition-colors duration-200">
                   <MessageCircle className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Telegram</p>
-                  <p className="text-lg font-semibold">@AS_Popov87</p>
+                  {showTelegram ? (
+                    <a
+                      href="https://t.me/AS_Popov87"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-lg font-semibold hover:text-blue-400"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      @AS_Popov87
+                    </a>
+                  ) : (
+                    <p className="text-lg font-semibold">Нажмите, чтобы показать</p>
+                  )}
                 </div>
-              </a>
+              </button>
 
               <a
                 href="mailto:murchelon@yandex.ru"
