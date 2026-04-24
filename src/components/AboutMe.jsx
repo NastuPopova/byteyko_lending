@@ -23,6 +23,7 @@ const achievements = [
 const AboutMe = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [showPhone, setShowPhone] = useState(false);
+  const [showTelegram, setShowTelegram] = useState(false);
 
   return (
     <>
@@ -100,22 +101,34 @@ const AboutMe = () => {
                   Связаться со мной
                 </h3>
                 <div className="space-y-4">
-                  <a
-                    href="https://t.me/AS_Popov87"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-4 p-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 group border border-primary-100 hover:border-blue-300"
+                  {/* Telegram — скрыт по умолчанию */}
+                  <button
+                    onClick={() => setShowTelegram(!showTelegram)}
+                    className="w-full flex items-center gap-4 p-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 group border border-primary-100 hover:border-blue-300"
                   >
                     <div className="bg-blue-500 p-3 rounded-lg group-hover:bg-blue-600 transition-colors duration-300">
                       <MessageCircle className="h-6 w-6 text-white" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 text-left">
                       <p className="text-sm text-gray-500 font-medium">Telegram</p>
-                      <p className="text-lg font-semibold text-gray-900">@AS_Popov87</p>
+                      {showTelegram ? (
+                        <a
+                          href="https://t.me/AS_Popov87"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-lg font-semibold text-blue-600 hover:text-blue-700 underline underline-offset-2"
+                        >
+                          @AS_Popov87
+                        </a>
+                      ) : (
+                        <p className="text-lg font-semibold text-gray-900">Нажмите, чтобы показать</p>
+                      )}
                     </div>
                     <span className="text-blue-500 font-medium group-hover:translate-x-1 transition-transform duration-300">→</span>
-                  </a>
+                  </button>
 
+                  {/* Телефон */}
                   <button
                     onClick={() => setShowPhone(!showPhone)}
                     className="w-full flex items-center gap-4 p-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 group border border-primary-100 hover:border-primary-300"
@@ -136,6 +149,7 @@ const AboutMe = () => {
                     <span className="text-primary-600 font-medium group-hover:translate-x-1 transition-transform duration-300">→</span>
                   </button>
 
+                  {/* Форма обратной связи */}
                   <button
                     onClick={() => setIsFormOpen(true)}
                     className="w-full flex items-center gap-4 p-4 bg-white rounded-xl hover:shadow-lg transition-all duration-300 group border border-primary-100 hover:border-orange-300"
