@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Quote, X, ChevronLeft, ChevronRight, Image as ImageIcon, CheckCircle, MessageCircle, Star, ThumbsUp, Shield } from 'lucide-react';
+import { Quote, X, ChevronLeft, ChevronRight, CheckCircle, MessageCircle, Star, ThumbsUp, Shield } from 'lucide-react';
 
 const PROXY_URL = 'https://buteyko-api.bothost.tech';
 
@@ -42,7 +42,7 @@ const initialReviews = [
     rating: 5,
     content: `Никогда не думал, что правильное дыхание может так сильно повлиять на качество жизни. После курса я заметил значительное улучшение в своей физической форме и выносливости.`,
     fullContent: `Никогда не думал, что правильное дыхание может так сильно повлиять на качество жизни. После курса я заметил значительное улучшение в своей физической форме и выносливости. Особенно помогает при занятиях спортом. Техники, которым научил Александр, действительно работают.`,
-    results: { 'улучшение сна': '40%', 'снижение стресса': '75%', 'повышение энеджии': '60%' },
+    results: { 'улучшение сна': '40%', 'снижение стресса': '75%', 'повышение энергии': '60%' },
     date: '1 марта 2024',
     avatar: null,
     image: '',
@@ -51,86 +51,27 @@ const initialReviews = [
   }
 ];
 
-// ─── Верификация через прокси ───
-const VerificationButton = ({ onVerify }) => {
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [statusText, setStatusText] = useState('Подтвердить через Telegram');
-
-  const handleVerification = async () => {
-    setIsVerifying(true);
-    setStatusText('Ожидаем подтверждения...');
-
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    sessionStorage.setItem('verificationCode', code);
-
-    window.open(`https://t.me/breathing_otziv_bot?start=${code}`, '_blank');
-
-    // Проверяем статус верификации через прокси
-    let attempts = 0;
-    const maxAttempts = 40; // 2 минуты
-
-    const checkStatus = async () => {
-      try {
-        const res = await fetch(`${PROXY_URL}/verify-telegram?code=${code}`);
-        const data = await res.json();
-        if (data.verified) {
-          sessionStorage.setItem('isVerified', 'true');
-          sessionStorage.setItem('telegramUsername', data.username || '');
-          onVerify(data.username || '');
-          setIsVerifying(false);
-          return;
-        }
-      } catch (_) {}
-
-      attempts++;
-      if (attempts < maxAttempts) {
-        setTimeout(checkStatus, 3000);
-      } else {
-        setIsVerifying(false);
-        setStatusText('Подтвердить через Telegram');
-        alert('Время верификации истекло. Перейдите в бот и отправьте команду /start.');
-      }
-    };
-
-    setTimeout(checkStatus, 3000);
-  };
-
-  return (
-    <button
-      onClick={handleVerification}
-      disabled={isVerifying}
-      className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-60"
-    >
-      <MessageCircle className="h-5 w-5" />
-      {statusText}
-    </button>
-  );
-};
-
-// ─── Форма отзыва ───
+// ─── Форма отзыва (без верификации) ───
 const ReviewForm = ({ onSubmit, onClose }) => {
-  const [isVerified, setIsVerified] = useState(() => sessionStorage.getItem('isVerified') === 'true');
-  const [telegramUsername, setTelegramUsername] = useState(() => sessionStorage.getItem('telegramUsername') || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    name: '', surname: '', rating: 5, content: '',
+    name: '',
+    rating: 5,
+    content: '',
     results: { 'улучшение сна': '0', 'снижение стресса': '0', 'повышение энергии': '0' }
   });
 
-  const handleVerification = (username) => {
-    setIsVerified(true);
-    setTelegramUsername(username);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isVerified) { alert('Пожалуйста, подтвердите свою личность через Telegram'); return; }
+    if (!formData.name.trim() || !formData.content.trim()) {
+      alert('Пожалуйста, заполните имя и текст отзыва');
+      return;
+    }
     setIsSubmitting(true);
 
     try {
       const payload = {
         name: formData.name,
-        telegramUsername,
         rating: formData.rating,
         content: formData.content,
         results: {
@@ -148,9 +89,7 @@ const ReviewForm = ({ onSubmit, onClose }) => {
       const data = await res.json();
 
       if (data.ok) {
-        sessionStorage.removeItem('isVerified');
-        sessionStorage.removeItem('telegramUsername');
-        onSubmit(); // сообщаем родителю об успехе
+        onSubmit();
         onClose();
       } else {
         alert('Ошибка при отправке. Попробуйте ещё раз.');
@@ -164,33 +103,18 @@ const ReviewForm = ({ onSubmit, onClose }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Блок верификации */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Shield className="h-5 w-5 text-yellow-600" />
-          <span className="font-medium text-yellow-800">Верификация отзыва</span>
-        </div>
-        <p className="text-sm text-yellow-600 mb-4">Для публикации отзыва необходимо подтвердить свою личность через Telegram</p>
-        {isVerified ? (
-          <div className="flex items-center gap-2 text-green-600">
-            <CheckCircle className="h-5 w-5" />
-            <span>Подтверждено через {telegramUsername}</span>
-          </div>
-        ) : (
-          <VerificationButton onVerify={handleVerification} />
-        )}
-      </div>
 
       {/* Имя */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Имя</label>
-          <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200" required />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Фамилия</label>
-          <input type="text" value={formData.surname} onChange={(e) => setFormData({ ...formData, surname: e.target.value })} className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200" />
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Имя *</label>
+        <input
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Как вас зовут?"
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
+          required
+        />
       </div>
 
       {/* Оценка */}
@@ -207,8 +131,14 @@ const ReviewForm = ({ onSubmit, onClose }) => {
 
       {/* Текст отзыва */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Ваш отзыв</label>
-        <textarea value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 h-32" required />
+        <label className="block text-sm font-medium text-gray-700 mb-2">Ваш отзыв *</label>
+        <textarea
+          value={formData.content}
+          onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+          placeholder="Расскажите о своём опыте..."
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 h-32"
+          required
+        />
       </div>
 
       {/* Результаты */}
@@ -218,25 +148,29 @@ const ReviewForm = ({ onSubmit, onClose }) => {
           {Object.entries(formData.results).map(([key, value]) => (
             <div key={key} className="flex items-center gap-4">
               <label className="text-sm text-gray-600 flex-1">{key}</label>
-              <input type="number" min="0" max="100" value={value}
+              <input
+                type="number" min="0" max="100" value={value}
                 onChange={(e) => setFormData({ ...formData, results: { ...formData.results, [key]: e.target.value } })}
-                className="w-24 px-4 py-2 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200" />
+                className="w-24 px-4 py-2 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
+              />
               <span className="text-sm text-gray-500">%</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Кнопка отправки */}
+      {/* Кнопка */}
       <button
         type="submit"
         disabled={isSubmitting}
         className="w-full bg-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-60"
       >
-        {isSubmitting ? 'Отправка...' : 'Отправить на модерацию'}
+        {isSubmitting ? 'Отправка...' : 'Опубликовать отзыв'}
       </button>
 
-      <p className="text-xs text-gray-400 text-center">ℹ️ Отзыв появится на сайте после проверки модератором</p>
+      <p className="text-xs text-gray-400 text-center">
+        ℹ️ Отзыв появится на сайте после проверки модератором
+      </p>
     </form>
   );
 };
@@ -296,11 +230,6 @@ const ReviewCard = ({ review, onClick, onImageClick }) => (
         <button className="flex items-center gap-1 text-gray-500 hover:text-teal-600 transition-colors">
           <ThumbsUp className="h-4 w-4" /><span className="text-xs">{review.likes}</span>
         </button>
-        {review.image && (
-          <button onClick={(e) => { e.stopPropagation(); onImageClick(review.image); }} className="flex items-center gap-1 text-teal-600 hover:text-teal-700 transition-colors">
-            <ImageIcon className="h-4 w-4" /><span className="text-xs font-medium">Фото</span>
-          </button>
-        )}
       </div>
     </div>
   </div>
@@ -311,12 +240,11 @@ const Reviews = () => {
   const [selectedReview, setSelectedReview] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [displayedReviews, setDisplayedReviews] = useState(3);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  const reviews = initialReviews; // статичные отзывы; новые идут через модерацию
+  const reviews = initialReviews;
 
   const showNext = () => { if (!isAnimating) { setIsAnimating(true); setCurrentIndex((prev) => (prev + 1) % reviews.length); } };
   const showPrev = () => { if (!isAnimating) { setIsAnimating(true); setCurrentIndex((prev) => (prev - 1 + reviews.length) % reviews.length); } };
@@ -325,7 +253,6 @@ const Reviews = () => {
     if (isAnimating) { const timer = setTimeout(() => setIsAnimating(false), 500); return () => clearTimeout(timer); }
   }, [isAnimating]);
 
-  // вызывается из ReviewForm после успешной отправки
   const handleSubmitSuccess = () => {
     setShowSuccessMessage(true);
     setTimeout(() => setShowSuccessMessage(false), 5000);
@@ -334,7 +261,7 @@ const Reviews = () => {
   return (
     <section id="reviews" className="py-20 bg-gradient-to-b from-primary-100 to-white">
 
-      {/* Тоаст об успехе */}
+      {/* Тост об успехе */}
       {showSuccessMessage && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-xl shadow-xl z-50 animate-fade-in-down max-w-sm">
           <div className="flex items-start gap-3">
@@ -358,7 +285,7 @@ const Reviews = () => {
         <div className="hidden md:block">
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
             {reviews.slice(0, displayedReviews).map((review, index) => (
-              <ReviewCard key={index} review={review} onClick={() => setSelectedReview(review)} onImageClick={(img) => setSelectedImage(img)} />
+              <ReviewCard key={index} review={review} onClick={() => setSelectedReview(review)} onImageClick={() => {}} />
             ))}
           </div>
           <div className="mt-12 text-center">
@@ -382,7 +309,7 @@ const Reviews = () => {
             <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
               {reviews.map((review, index) => (
                 <div key={index} className="w-full flex-shrink-0 px-4">
-                  <ReviewCard review={review} onClick={() => setSelectedReview(review)} onImageClick={(img) => setSelectedImage(img)} />
+                  <ReviewCard review={review} onClick={() => setSelectedReview(review)} onImageClick={() => {}} />
                 </div>
               ))}
             </div>
@@ -410,17 +337,6 @@ const Reviews = () => {
                 </div>
                 <p className="text-gray-600 whitespace-pre-line">{selectedReview.fullContent}</p>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Модал фото */}
-        {selectedImage && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedImage(null)} />
-            <div className="relative max-w-4xl w-full max-h-[90vh] flex items-center justify-center">
-              <button onClick={() => setSelectedImage(null)} className="absolute top-4 right-4 p-2 bg-white/10 rounded-full"><X className="h-6 w-6 text-white" /></button>
-              <img src={selectedImage} alt="Фото отзыва" className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl" />
             </div>
           </div>
         )}
