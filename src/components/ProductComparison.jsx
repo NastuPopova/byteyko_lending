@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../styles/ProductComparison.css';
+import PurchaseModal from './PurchaseModal';
 
 const YES  = () => <span className="yes-icon">✓</span>;
 const NO   = () => <span className="no-icon">−</span>;
@@ -77,17 +78,8 @@ const rows = [
   },
 ];
 
-const TELEGRAM_BOT = 'breathing_opros_bot';
-
 const ProductComparison = () => {
-  const go = (key) => {
-    const links = {
-      trial:     `https://t.me/${TELEGRAM_BOT}?start=websiteCtaTrial`,
-      intensive: `https://t.me/${TELEGRAM_BOT}?start=websiteCtaIntensive`,
-      course:    `https://t.me/${TELEGRAM_BOT}?start=websiteCtaCourse`,
-    };
-    window.open(links[key], '_blank');
-  };
+  const [modalPlan, setModalPlan] = useState(null);
 
   return (
     <section className="products-comparison light-bg">
@@ -140,9 +132,9 @@ const ProductComparison = () => {
               ))}
               <tr className="action-row">
                 <td></td>
-                <td><button onClick={() => go('trial')} className="cta-button cta-small">Получить доступ</button></td>
-                <td><button onClick={() => go('intensive')} className="cta-button cta-small">Начать интенсив</button></td>
-                <td><button onClick={() => go('course')} className="cta-button cta-small cta-primary">Начать курс</button></td>
+                <td><button onClick={() => setModalPlan({ id: 'trial' })} className="cta-button cta-small">Получить доступ</button></td>
+                <td><button onClick={() => setModalPlan({ id: 'intensive' })} className="cta-button cta-small">Начать интенсив</button></td>
+                <td><button onClick={() => setModalPlan({ id: 'course' })} className="cta-button cta-small cta-primary">Начать курс</button></td>
               </tr>
             </tbody>
           </table>
@@ -152,6 +144,13 @@ const ProductComparison = () => {
           <p>⁂ Результат зависит от систематичности практики и выполнения рекомендаций инструктора. Метод Бутейко — это не замена медицинского лечения, а дополнение к нему.</p>
         </div>
       </div>
+
+      {modalPlan && (
+        <PurchaseModal
+          initialPlan={modalPlan}
+          onClose={() => setModalPlan(null)}
+        />
+      )}
     </section>
   );
 };
