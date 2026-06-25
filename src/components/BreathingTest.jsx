@@ -291,26 +291,53 @@ const SurveyEngine = ({ onClose }) => {
             </div>
           </div>
           <p className="text-sm text-gray-700 leading-relaxed">
-            {contact?.name ? `${contact.name}, запишитесь` : 'Запишитесь'} на <strong>пробное занятие</strong> — разберём ваш результат вместе и составим персональный план.
+            {contact?.name ? `${contact.name}, предлагаю` : 'Предлагаю'} начать с видеоурока — испытаете метод на себе, получите домашнее задание и почувствуете результат уже в первый день.
           </p>
         </div>
 
         <button
           onClick={handleBook}
           disabled={sending}
-          className="inline-flex flex-col items-center justify-center gap-0.5 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3.5 rounded-xl text-base hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] mb-2 disabled:opacity-70 disabled:cursor-wait"
+          className="inline-flex flex-col items-center justify-center gap-0.5 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3.5 rounded-xl text-base hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] mb-3 disabled:opacity-70 disabled:cursor-wait"
         >
           {sending ? (
             <span>⏳ Отправляем...</span>
           ) : sent ? (
-            <span>✅ Записаться в Telegram →</span>
+            <span>✅ Перейти в Telegram →</span>
           ) : (
             <>
-              <span>📲 Записаться на пробное занятие →</span>
+              <span>🎬 Получить видеоурок →</span>
               <span className="text-sm font-semibold opacity-90">1 500 ₽</span>
             </>
           )}
         </button>
+
+        <div className="flex flex-col items-center gap-1.5 mb-2">
+          <p className="text-xs text-gray-400">Или свяжитесь напрямую:</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <a
+              href="https://t.me/AS_Popov87"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-500 hover:text-blue-700 transition-colors font-medium"
+            >
+              📲 Telegram
+            </a>
+            <a
+              href="tel:+79224705187"
+              className="text-xs text-teal-600 hover:text-teal-800 transition-colors font-medium"
+            >
+              📞 +7 (922) 470-51-87
+            </a>
+            <a
+              href="mailto:murchelon@yandex.ru"
+              className="text-xs text-gray-500 hover:text-gray-700 transition-colors font-medium"
+            >
+              ✉️ murchelon@yandex.ru
+            </a>
+          </div>
+        </div>
+
         <button onClick={onClose} className="w-full text-gray-400 text-sm hover:text-gray-600 transition-colors py-1">Закрыть</button>
       </ModalShell>
     );
