@@ -1,17 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Send, Gift } from 'lucide-react';
+import PurchaseModal from './PurchaseModal';
 
-const TELEGRAM_BOT = 'breathing_opros_bot';
+const plans = {
+  trial:     { id: 'trial' },
+  intensive: { id: 'intensive' },
+  course:    { id: 'course' },
+};
 
 const BuyCourse = () => {
-  const handleTelegramRedirect = (key) => {
-    const links = {
-      trial:     `https://t.me/${TELEGRAM_BOT}?start=websiteCtaTrial`,
-      intensive: `https://t.me/${TELEGRAM_BOT}?start=websiteCtaIntensive`,
-      course:    `https://t.me/${TELEGRAM_BOT}?start=websiteCtaCourse`,
-    };
-    window.open(links[key], '_blank');
-  };
+  const [modalPlan, setModalPlan] = useState(null);
 
   return (
     <section className="py-20 bg-gradient-to-b from-primary-600 to-primary-800">
@@ -38,11 +36,11 @@ const BuyCourse = () => {
               <p className="text-sm text-gray-500 mt-2">40 минут, онлайн</p>
             </div>
             <button
-              onClick={() => handleTelegramRedirect('trial')}
+              onClick={() => setModalPlan(plans.trial)}
               className="w-full bg-primary-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-primary-700 transition-colors duration-300 flex items-center justify-center"
             >
               <Send className="h-5 w-5 mr-2" />
-              Записаться
+              Получить доступ
             </button>
           </div>
 
@@ -57,11 +55,11 @@ const BuyCourse = () => {
               <p className="text-sm text-gray-500 mt-2">7 дней × 30 минут</p>
             </div>
             <button
-              onClick={() => handleTelegramRedirect('intensive')}
+              onClick={() => setModalPlan(plans.intensive)}
               className="w-full bg-primary-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-primary-700 transition-colors duration-300 flex items-center justify-center"
             >
               <Send className="h-5 w-5 mr-2" />
-              Записаться
+              Начать интенсив
             </button>
           </div>
 
@@ -84,7 +82,7 @@ const BuyCourse = () => {
               </div>
             </div>
             <button
-              onClick={() => handleTelegramRedirect('course')}
+              onClick={() => setModalPlan(plans.course)}
               className="w-full bg-yellow-400 text-primary-900 font-bold py-3 px-6 rounded-xl hover:bg-yellow-300 transition-colors duration-300 flex items-center justify-center shadow-lg"
             >
               <Send className="h-5 w-5 mr-2" />
@@ -105,6 +103,13 @@ const BuyCourse = () => {
           </a>
         </div>
       </div>
+
+      {modalPlan && (
+        <PurchaseModal
+          initialPlan={modalPlan}
+          onClose={() => setModalPlan(null)}
+        />
+      )}
     </section>
   );
 };
