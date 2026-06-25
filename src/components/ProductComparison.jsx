@@ -29,19 +29,19 @@ const rows = [
       },
       {
         label: 'Измерение КП',
-        trial:     <NO />,
+        trial:     'До и после упражнения',
         intensive: 'Каждый день — отслеживаем динамику',
         course:    'На каждом занятии',
       },
       {
         label: 'Контроль выполнения',
-        trial:     <YES />,
+        trial:     <NO />,
         intensive: 'Ежедневно — вижу и корректирую',
         course:    'На каждом занятии',
       },
       {
         label: 'Поддержка в Telegram',
-        trial:     <YES />,
+        trial:     <NO />,
         intensive: 'Между занятиями в рабочее время',
         course:    'Между занятиями',
       },
@@ -63,13 +63,13 @@ const rows = [
     items: [
       {
         label: '',
-        trial:     'Познакомитесь с методом в удобное время',
+        trial:     'Понямёте метод и почувствуете результат за 40 мин',
         intensive: 'Сформируете привычку правильного дыхания за 7 дней',
         course:    'Осваиваете полный комплекс упражнений Бутейко',
       },
       {
         label: 'Снижение симптомов',
-        trial:     'Понимание метода за одно занятие',
+        trial:     'Снятие симптома прямо во время урока',
         intensive: 'Устойчивое улучшение за неделю',
         course:    'Глубокая работа с причиной',
       },
@@ -140,7 +140,7 @@ const ProductComparison = () => {
               ))}
               <tr className="action-row">
                 <td></td>
-                <td><button onClick={() => go('trial')} className="cta-button cta-small">Записаться</button></td>
+                <td><button onClick={() => go('trial')} className="cta-button cta-small">Получить доступ</button></td>
                 <td><button onClick={() => go('intensive')} className="cta-button cta-small">Начать интенсив</button></td>
                 <td><button onClick={() => go('course')} className="cta-button cta-small cta-primary">Начать курс</button></td>
               </tr>
