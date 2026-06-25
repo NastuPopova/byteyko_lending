@@ -27,10 +27,10 @@ const BuyCourse = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
 
-          {/* Пробное занятие */}
+          {/* Видеоурок */}
           <div className="bg-white rounded-2xl p-8 shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col">
             <div className="text-center mb-6 flex-1">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Пробное занятие</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Видеоурок</h3>
               <div className="flex items-baseline justify-center">
                 <span className="text-4xl font-extrabold text-primary-600">1 500</span>
                 <span className="text-xl text-gray-500 ml-1">₽</span>
@@ -76,7 +76,8 @@ const BuyCourse = () => {
                 <span className="text-4xl font-extrabold text-white">25 000</span>
                 <span className="text-xl text-primary-100 ml-1">₽</span>
               </div>
-              <p className="text-sm text-primary-100 mt-2">5 × 60 мин, раз в неделю</p>
+              <p className="text-sm text-primary-100 mt-2">5 × 45 мин, раз в неделю</p>
+              <p className="text-xs text-primary-200 mt-1">5 000 ₽ / занятие</p>
               <div className="mt-3 inline-flex items-center gap-2 bg-yellow-400 text-primary-900 px-3 py-1 rounded-full text-sm font-bold">
                 <Gift className="h-4 w-4" />
                 Системный результат
