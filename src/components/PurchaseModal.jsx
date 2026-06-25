@@ -10,15 +10,15 @@ const plans = [
     badge: 'Начните здесь',
     badgeColor: '#2D6A4F',
     badgeBg: '#D8F3DC',
-    title: 'Пробное занятие',
-    subtitle: 'Почувствуйте результат за 40 минут',
+    title: 'Видеоурок',
+    subtitle: 'Познакомьтесь с методом в удобное время',
     price: '1 500',
-    unit: '₽ за занятие',
+    unit: '₽',
     features: [
-      'Замер контрольной паузы до и после',
-      'Практика расслабления по Бутейко',
-      'Снятие симптома прямо на занятии',
-      'Домашнее задание и личная обратная связь',
+      'Краткая теоретическая часть метода',
+      'Измерение КП до и после упражнения',
+      'Снятие симптома прямо во время урока',
+      'Доступ к видео сразу после оплаты',
     ],
   },
   {
@@ -43,11 +43,11 @@ const plans = [
     badgeColor: '#1a3a5c',
     badgeBg: '#DBEAFE',
     title: 'Курс 5 занятий',
-    subtitle: 'Полная программа метода Бутейко под личным контролем',
+    subtitle: '5 × 45 мин, раз в неделю · 5 000 ₽ / занятие',
     price: '25 000',
     unit: '₽ за курс',
     features: [
-      '5 занятий по 60 минут раз в неделю',
+      '5 занятий по 45 минут раз в неделю',
       'Полная программа упражнений метода',
       'Отслеживание КП в динамике',
       'Поддержка в Telegram между занятиями',
@@ -132,13 +132,11 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
   const [visible, setVisible] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Анимация появления
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 10);
     return () => clearTimeout(t);
   }, []);
 
-  // Блокировка скролла страницы
   useEffect(() => {
     const scrollY = window.scrollY;
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
@@ -157,7 +155,6 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
     };
   }, []);
 
-  // Закрытие по Escape
   useEffect(() => {
     const handler = (e) => {
       if (e.key === 'Escape') {
@@ -172,7 +169,6 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
     return () => window.removeEventListener('keydown', handler);
   }, [step, showConfirm]);
 
-  // Запрос закрытия — показываем подтверждение если не SUCCESS
   const handleCloseRequest = () => {
     if (step === STEPS.SUCCESS) {
       doClose();
@@ -237,7 +233,6 @@ const PurchaseModal = ({ initialPlan, onClose }) => {
     >
       <div style={modalStyle}>
 
-        {/* Диалог подтверждения выхода */}
         {showConfirm && (
           <CloseConfirmDialog
             onStay={() => setShowConfirm(false)}
