@@ -11,67 +11,67 @@ const rows = [
     items: [
       {
         label: 'Цена',
-        trial:     <strong>1 500 ₽</strong>,
-        intensive: <strong>14 000 ₽</strong>,
-        course:    <strong>25 000 ₽</strong>,
+        trial:     <strong>1 500 ₽</strong>,
+        intensive: <strong>14 000 ₽</strong>,
+        course:    <strong>25 000 ₽</strong>,
       },
       {
         label: 'Формат',
-        trial:     'Персональное занятие 1:1',
-        intensive: '7 занятий подряд, каждый день',
-        course:    '5 персональных занятий 1:1',
+        trial:     'Видеозапись, онлайн',
+        intensive: '7 занятий подряд, каждый день',
+        course:    '5 персональных занятий 1:1',
       },
       {
         label: 'Длительность',
-        trial:     '60 минут',
-        intensive: '30 минут в день',
-        course:    '60 минут каждое',
+        trial:     '40 минут',
+        intensive: '30 минут в день',
+        course:    '45 минут каждое',
       },
       {
-        label: 'Измерение КП',
-        trial:     'До и после',
-        intensive: 'Каждый день — отслеживаем динамику',
-        course:    'На каждом занятии',
-      },
-      {
-        label: 'Контроль выполнения',
-        trial:     'На занятии',
-        intensive: 'Ежедневно — вижу и корректирую',
-        course:    'На каждом занятии',
-      },
-      {
-        label: 'Поддержка в Telegram',
+        label: 'Измерение КП',
         trial:     <NO />,
-        intensive: 'Между занятиями в рабочее время',
+        intensive: 'Каждый день — отслеживаем динамику',
+        course:    'На каждом занятии',
+      },
+      {
+        label: 'Контроль выполнения',
+        trial:     <YES />,
+        intensive: 'Ежедневно — вижу и корректирую',
+        course:    'На каждом занятии',
+      },
+      {
+        label: 'Поддержка в Telegram',
+        trial:     <YES />,
+        intensive: 'Между занятиями в рабочее время',
         course:    'Между занятиями',
       },
     ],
   },
   {
-    group: 'Для кого',
+    group: 'Для кого',
     items: [
       {
         label: '',
         trial:     'Первое знакомство с методом',
-        intensive: 'Астма, гипертония, хронические симптомы каждый день',
-        course:    'Стресс, общее оздоровление, системный подход',
+        intensive: 'Астма, гипертония, хронические симптомы каждый день',
+        course:    'Стресс, общее оздоровление, системный подход',
       },
     ],
   },
   {
-    group: 'Чего достигнете',
+    group: 'Чего достигнете',
     items: [
       {
         label: '',
-        trial:     'Почувствуете облегчение симптомов прямо на занятии',
-        intensive: 'Сформируете привычку правильного дыхания за 7 дней',
-        course:    'Осваиваете полный комплекс упражнений Бутейко',
+        trial:     'Познакомитесь с методом в удобное время',
+        intensive: 'Сформируете привычку правильного дыхания за 7 дней',
+        course:    'Осваиваете полный комплекс упражнений Бутейко',
       },
       {
         label: 'Снижение симптомов',
-        trial:     'Первый результат на занятии',
-        intensive: 'Устойчивое улучшение за неделю',
-        course:    'Глубокая работа с причиной',
+        trial:     'Понимание метода за одно занятие',
+        intensive: 'Устойчивое улучшение за неделю',
+        course:    'Глубокая работа с причиной',
       },
     ],
   },
@@ -102,23 +102,23 @@ const ProductComparison = () => {
                 <th className="feature-header"></th>
                 <th className="product-header">
                   <div className="product-badge badge-green">Начните здесь</div>
-                  <div className="product-name">Пробное занятие</div>
-                  <div className="product-price">1 500 ₽</div>
-                  <div className="product-meta">60 мин, 1 занятие</div>
+                  <div className="product-name">Видеоурок</div>
+                  <div className="product-price">1 500 ₽</div>
+                  <div className="product-meta">40 мин, онлайн</div>
                 </th>
                 <th className="product-header">
                   <div className="product-badge badge-amber">Быстрый результат</div>
-                  <div className="product-name">Недельный интенсив</div>
-                  <div className="product-price">14 000 ₽</div>
-                  <div className="product-meta">7 дней × 30 мин</div>
+                  <div className="product-name">Недельный интенсив</div>
+                  <div className="product-price">14 000 ₽</div>
+                  <div className="product-meta">7 дней × 30 мин</div>
                 </th>
                 <th className="product-header highlight">
-                  <div className="bestseller-tag">Лучший выбор</div>
+                  <div className="bestseller-tag">Лучший выбор</div>
                   <div className="product-badge badge-blue">Системный результат</div>
-                  <div className="product-name">Курс 5 занятий</div>
-                  <div className="product-price">25 000 ₽</div>
-                  <div className="product-meta">5 × 60 мин, раз в неделю</div>
-                  <div className="product-note">3 000 ₽ / занятие</div>
+                  <div className="product-name">Курс 5 занятий</div>
+                  <div className="product-price">25 000 ₽</div>
+                  <div className="product-meta">5 × 45 мин, раз в неделю</div>
+                  <div className="product-note">5 000 ₽ / занятие</div>
                 </th>
               </tr>
             </thead>
@@ -141,8 +141,8 @@ const ProductComparison = () => {
               <tr className="action-row">
                 <td></td>
                 <td><button onClick={() => go('trial')} className="cta-button cta-small">Записаться</button></td>
-                <td><button onClick={() => go('intensive')} className="cta-button cta-small">Начать интенсив</button></td>
-                <td><button onClick={() => go('course')} className="cta-button cta-small cta-primary">Начать курс</button></td>
+                <td><button onClick={() => go('intensive')} className="cta-button cta-small">Начать интенсив</button></td>
+                <td><button onClick={() => go('course')} className="cta-button cta-small cta-primary">Начать курс</button></td>
               </tr>
             </tbody>
           </table>
