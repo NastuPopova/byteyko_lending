@@ -142,6 +142,11 @@ function fetchWithTimeout(url, options, ms = 8000) {
     .finally(() => clearTimeout(timer));
 }
 
+// ── Пауза между попытками ─────────────────────────────────────────────────────
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // ── Лиды с дыхательного теста ────────────────────────────────────────────────
 export async function sendLeadToTelegram({ contact, userData, result }) {
   const payload = {
@@ -216,28 +221,57 @@ export async function sendLeadToTelegram({ contact, userData, result }) {
 }
 
 // ── Заявки на покупку с лендинга ──────────────────────────────────────────────
+// Логика: 3 попытки с паузой 1с → 2с между ними.
+// Успех = сервер ответил ok:true (Telegram) ИЛИ sheets:true (Google Sheets).
+// Это значит: даже если Telegram временно недоступен — заявка в Sheets сохранена,
+// и пользователь видит экран успеха, а не ошибку.
 export async function sendPurchaseIntent({ plan, contacts }) {
-  try {
-    const resp = await fetchWithTimeout(
-      PURCHASE_URL,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, contacts }),
-      },
-      8000
-    );
+  const MAX_ATTEMPTS = 3;
+  const DELAYS = [1000, 2000]; // паузы между попытками 1 и 2, 2 и 3
 
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      throw new Error(err.error || `Proxy error ${resp.status}`);
+  let lastError = '';
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      console.log(`📤 Попытка отправки заявки ${attempt}/${MAX_ATTEMPTS}...`);
+
+      const resp = await fetchWithTimeout(
+        PURCHASE_URL,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan, contacts }),
+        },
+        8000
+      );
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || `Proxy error ${resp.status}`);
+      }
+
+      const data = await resp.json();
+
+      // Успех если Telegram ответил ok ИЛИ хотя бы Google Sheets записал
+      if (data.ok === true || data.sheets === true) {
+        console.log(`✅ Заявка принята (попытка ${attempt}): tg=${data.ok}, sheets=${data.sheets}`);
+        return true;
+      }
+
+      throw new Error(`Сервер вернул ok=false, sheets=false`);
+
+    } catch (err) {
+      lastError = err.message;
+      console.warn(`⚠️ Попытка ${attempt} не удалась: ${lastError}`);
+
+      if (attempt < MAX_ATTEMPTS) {
+        const pauseMs = DELAYS[attempt - 1] || 2000;
+        console.log(`⏳ Пауза ${pauseMs / 1000}с перед следующей попыткой...`);
+        await delay(pauseMs);
+      }
     }
-
-    const data = await resp.json();
-    console.log('✅ Заявка на покупку отправлена через прокси', data);
-    return data.ok === true;
-  } catch (err) {
-    console.error('❌ Не удалось отправить заявку:', err.message);
-    return false;
   }
+
+  console.error(`❌ Все ${MAX_ATTEMPTS} попытки исчерпаны. Последняя ошибка: ${lastError}`);
+  return false;
 }
