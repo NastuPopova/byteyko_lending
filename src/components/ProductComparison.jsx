@@ -98,12 +98,14 @@ const ProductComparison = () => {
                   <div className="product-price">1 500 ₽</div>
                   <div className="product-meta">40 мин, онлайн</div>
                 </th>
+                {/* ВРЕМЕННО ОТКЛЮЧЕНО — Недельный интенсив
                 <th className="product-header">
                   <div className="product-badge badge-amber">Быстрый результат</div>
                   <div className="product-name">Недельный интенсив</div>
                   <div className="product-price">14 000 ₽</div>
                   <div className="product-meta">7 дней × 30 мин</div>
                 </th>
+                */}
                 <th className="product-header highlight">
                   <div className="bestseller-tag">Лучший выбор</div>
                   <div className="product-badge badge-blue">Системный результат</div>
@@ -124,7 +126,7 @@ const ProductComparison = () => {
                     <tr key={i}>
                       <td className="feature-name">{row.label}</td>
                       <td>{row.trial}</td>
-                      <td>{row.intensive}</td>
+                      {/* <td>{row.intensive}</td> */}
                       <td>{row.course}</td>
                     </tr>
                   ))}
@@ -133,7 +135,9 @@ const ProductComparison = () => {
               <tr className="action-row">
                 <td></td>
                 <td><button onClick={() => setModalPlan({ id: 'trial' })} className="cta-button cta-small">Получить доступ</button></td>
+                {/* ВРЕМЕННО ОТКЛЮЧЕНО — Недельный интенсив
                 <td><button onClick={() => setModalPlan({ id: 'intensive' })} className="cta-button cta-small">Начать интенсив</button></td>
+                */}
                 <td><button onClick={() => setModalPlan({ id: 'course' })} className="cta-button cta-small cta-primary">Начать курс</button></td>
               </tr>
             </tbody>
