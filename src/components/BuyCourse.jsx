@@ -13,7 +13,7 @@ const BuyCourse = () => {
 
   return (
     <section className="py-20 bg-gradient-to-b from-primary-600 to-primary-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Готовы начать обучение методу Бутейко?
@@ -23,72 +23,79 @@ const BuyCourse = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        {/* Асимметричный макет: Видеоурок слева (40%), Курс справа (60%) */}
+        <div className="flex flex-col md:flex-row gap-6 items-stretch justify-center">
 
-          {/* Видеоурок */}
-          <div className="bg-white rounded-2xl p-8 shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col">
-            <div className="text-center mb-6 flex-1">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Видеоурок</h3>
-              <div className="flex items-baseline justify-center">
-                <span className="text-4xl font-extrabold text-primary-600">1 500</span>
-                <span className="text-xl text-gray-500 ml-1">₽</span>
+          {/* Видеоурок — 40% */}
+          <div className="md:w-2/5">
+            <div className="bg-white rounded-2xl p-8 shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col h-full">
+              <div className="text-center mb-6 flex-1">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Видеоурок</h3>
+                <div className="flex items-baseline justify-center">
+                  <span className="text-4xl font-extrabold text-primary-600">1 500</span>
+                  <span className="text-xl text-gray-500 ml-1">₽</span>
+                </div>
+                <p className="text-sm text-gray-500 mt-2">40 минут, онлайн</p>
               </div>
-              <p className="text-sm text-gray-500 mt-2">40 минут, онлайн</p>
+              <button
+                onClick={() => setModalPlan(plans.trial)}
+                className="w-full bg-primary-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-primary-700 transition-colors duration-300 flex items-center justify-center"
+              >
+                <Send className="h-5 w-5 mr-2" />
+                Получить доступ
+              </button>
             </div>
-            <button
-              onClick={() => setModalPlan(plans.trial)}
-              className="w-full bg-primary-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-primary-700 transition-colors duration-300 flex items-center justify-center"
-            >
-              <Send className="h-5 w-5 mr-2" />
-              Получить доступ
-            </button>
           </div>
 
           {/* ВРЕМЕННО ОТКЛЮЧЕНО — Недельный интенсив (будет заменён другим продуктом)
-          <div className="bg-white rounded-2xl p-8 shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col">
-            <div className="text-center mb-6 flex-1">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Недельный интенсив</h3>
-              <div className="flex items-baseline justify-center">
-                <span className="text-4xl font-extrabold text-primary-600">14 000</span>
-                <span className="text-xl text-gray-500 ml-1">₽</span>
+          <div className="md:w-2/5">
+            <div className="bg-white rounded-2xl p-8 shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col h-full">
+              <div className="text-center mb-6 flex-1">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Недельный интенсив</h3>
+                <div className="flex items-baseline justify-center">
+                  <span className="text-4xl font-extrabold text-primary-600">14 000</span>
+                  <span className="text-xl text-gray-500 ml-1">₽</span>
+                </div>
+                <p className="text-sm text-gray-500 mt-2">7 дней × 30 минут</p>
               </div>
-              <p className="text-sm text-gray-500 mt-2">7 дней × 30 минут</p>
+              <button
+                onClick={() => setModalPlan(plans.intensive)}
+                className="w-full bg-primary-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-primary-700 transition-colors duration-300 flex items-center justify-center"
+              >
+                <Send className="h-5 w-5 mr-2" />
+                Начать интенсив
+              </button>
             </div>
-            <button
-              onClick={() => setModalPlan(plans.intensive)}
-              className="w-full bg-primary-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-primary-700 transition-colors duration-300 flex items-center justify-center"
-            >
-              <Send className="h-5 w-5 mr-2" />
-              Начать интенсив
-            </button>
           </div>
           */}
 
-          {/* Курс 5 занятий */}
-          <div className="relative bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl p-8 shadow-2xl hover:scale-105 transition-all duration-300 ring-4 ring-yellow-400 flex flex-col">
-            <div className="absolute -top-4 -right-4 bg-yellow-400 text-primary-900 px-4 py-2 rounded-xl text-sm font-bold transform rotate-12 shadow-lg">
-              🔥 Лучший выбор 🔥
-            </div>
-            <div className="text-center mb-6 flex-1">
-              <h3 className="text-2xl font-bold text-white mb-2">Курс 5 занятий</h3>
-              <div className="flex items-baseline justify-center">
-                <span className="text-4xl font-extrabold text-white">25 000</span>
-                <span className="text-xl text-primary-100 ml-1">₽</span>
+          {/* Курс 5 занятий — 60% */}
+          <div className="md:w-3/5">
+            <div className="relative bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl p-10 shadow-2xl hover:scale-105 transition-all duration-300 ring-4 ring-yellow-400 flex flex-col h-full">
+              <div className="absolute -top-4 -right-4 bg-yellow-400 text-primary-900 px-4 py-2 rounded-xl text-sm font-bold transform rotate-12 shadow-lg">
+                🔥 Лучший выбор 🔥
               </div>
-              <p className="text-sm text-primary-100 mt-2">5 × 45 мин, раз в неделю</p>
-              <p className="text-xs text-primary-200 mt-1">5 000 ₽ / занятие</p>
-              <div className="mt-3 inline-flex items-center gap-2 bg-yellow-400 text-primary-900 px-3 py-1 rounded-full text-sm font-bold">
-                <Gift className="h-4 w-4" />
-                Системный результат
+              <div className="text-center mb-6 flex-1">
+                <h3 className="text-3xl font-bold text-white mb-2">Курс 5 занятий</h3>
+                <div className="flex items-baseline justify-center">
+                  <span className="text-5xl font-extrabold text-white">25 000</span>
+                  <span className="text-xl text-primary-100 ml-2">₽</span>
+                </div>
+                <p className="text-base text-primary-100 mt-2">5 × 45 мин, раз в неделю</p>
+                <p className="text-sm text-primary-200 mt-1">5 000 ₽ / занятие</p>
+                <div className="mt-4 inline-flex items-center gap-2 bg-yellow-400 text-primary-900 px-3 py-1 rounded-full text-sm font-bold">
+                  <Gift className="h-4 w-4" />
+                  Системный результат
+                </div>
               </div>
+              <button
+                onClick={() => setModalPlan(plans.course)}
+                className="w-full bg-yellow-400 text-primary-900 font-bold py-4 px-6 rounded-xl hover:bg-yellow-300 transition-colors duration-300 flex items-center justify-center shadow-lg text-lg"
+              >
+                <Send className="h-5 w-5 mr-2" />
+                Начать курс
+              </button>
             </div>
-            <button
-              onClick={() => setModalPlan(plans.course)}
-              className="w-full bg-yellow-400 text-primary-900 font-bold py-3 px-6 rounded-xl hover:bg-yellow-300 transition-colors duration-300 flex items-center justify-center shadow-lg"
-            >
-              <Send className="h-5 w-5 mr-2" />
-              Начать курс
-            </button>
           </div>
         </div>
 
