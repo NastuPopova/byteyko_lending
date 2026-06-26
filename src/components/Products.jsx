@@ -71,10 +71,13 @@ const Products = () => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [modalPlan, setModalPlan] = useState(null);
 
+  const secondary = plans.filter(p => !p.highlight);
+  const primary = plans.find(p => p.highlight);
+
   return (
     <section id="products" className="py-20 bg-gradient-to-b from-white to-primary-100">
       <SectionTransition>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Выберите формат обучения методу Бутейко
@@ -84,67 +87,119 @@ const Products = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {plans.map((plan) => (
-              <div
-                key={plan.id}
-                className={`rounded-2xl p-8 shadow-xl flex flex-col transition-all duration-300 hover:scale-105 ${
-                  plan.highlight
-                    ? 'bg-gradient-to-br from-primary-600 to-primary-800 text-white ring-4 ring-yellow-400'
-                    : 'bg-white text-gray-900'
-                }`}
-              >
-                <div className="mb-2">
-                  <span
-                    className="inline-block text-xs font-bold px-3 py-1 rounded-full mb-3"
-                    style={{ color: plan.badgeColor, backgroundColor: plan.badgeBg }}
-                  >
-                    {plan.badge}
-                  </span>
-                  <h3 className={`text-2xl font-bold mb-1 ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>
-                    {plan.title}
-                  </h3>
-                  <p className={`text-sm mb-4 ${plan.highlight ? 'text-primary-100' : 'text-gray-500'}`}>
-                    {plan.subtitle}
-                  </p>
-                  {plan.forWhom && (
-                    <p className={`text-xs italic mb-4 ${plan.highlight ? 'text-primary-200' : 'text-gray-400'}`}>
-                      Для кого: {plan.forWhom}
-                    </p>
-                  )}
-                </div>
+          {/* Асимметричный макет: secondary слева (40%), primary справа (60%) */}
+          <div className="flex flex-col md:flex-row gap-6 items-stretch justify-center">
 
-                <div className="flex items-baseline mb-6">
-                  <span className={`text-4xl font-extrabold ${plan.highlight ? 'text-white' : 'text-primary-600'}`}>
-                    {plan.price}
-                  </span>
-                  <span className={`ml-1 text-lg ${plan.highlight ? 'text-primary-100' : 'text-gray-500'}`}>
-                    {plan.unit}
-                  </span>
-                </div>
-
-                <ul className="space-y-3 mb-8 flex-1">
-                  {plan.features.map((f, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <Check className={`h-5 w-5 mt-0.5 flex-shrink-0 ${plan.highlight ? 'text-yellow-400' : 'text-primary-500'}`} />
-                      <span className={`text-sm ${plan.highlight ? 'text-primary-100' : 'text-gray-600'}`}>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={() => setModalPlan(plan)}
-                  className={`w-full font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors duration-300 ${
-                    plan.highlight
-                      ? 'bg-yellow-400 text-primary-900 hover:bg-yellow-300'
-                      : 'bg-primary-600 text-white hover:bg-primary-700'
-                  }`}
+            {/* Вторичные карточки — левая колонка */}
+            <div className="flex flex-col gap-6 md:w-2/5">
+              {secondary.map((plan) => (
+                <div
+                  key={plan.id}
+                  className="rounded-2xl p-8 shadow-xl flex flex-col bg-white text-gray-900 transition-all duration-300 hover:scale-105 flex-1"
                 >
-                  <Send className="h-5 w-5" />
-                  {plan.cta}
-                </button>
+                  <div className="mb-2">
+                    <span
+                      className="inline-block text-xs font-bold px-3 py-1 rounded-full mb-3"
+                      style={{ color: plan.badgeColor, backgroundColor: plan.badgeBg }}
+                    >
+                      {plan.badge}
+                    </span>
+                    <h3 className="text-2xl font-bold mb-1 text-gray-900">
+                      {plan.title}
+                    </h3>
+                    <p className="text-sm mb-4 text-gray-500">
+                      {plan.subtitle}
+                    </p>
+                    {plan.forWhom && (
+                      <p className="text-xs italic mb-4 text-gray-400">
+                        Для кого: {plan.forWhom}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-baseline mb-6">
+                    <span className="text-4xl font-extrabold text-primary-600">
+                      {plan.price}
+                    </span>
+                    <span className="ml-1 text-lg text-gray-500">
+                      {plan.unit}
+                    </span>
+                  </div>
+
+                  <ul className="space-y-3 mb-8 flex-1">
+                    {plan.features.map((f, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <Check className="h-5 w-5 mt-0.5 flex-shrink-0 text-primary-500" />
+                        <span className="text-sm text-gray-600">{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button
+                    onClick={() => setModalPlan(plan)}
+                    className="w-full font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors duration-300 bg-primary-600 text-white hover:bg-primary-700"
+                  >
+                    <Send className="h-5 w-5" />
+                    {plan.cta}
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Главная карточка — правая колонка (60%) */}
+            {primary && (
+              <div className="md:w-3/5">
+                <div
+                  className="rounded-2xl p-10 shadow-2xl flex flex-col bg-gradient-to-br from-primary-600 to-primary-800 text-white ring-4 ring-yellow-400 transition-all duration-300 hover:scale-105 h-full"
+                >
+                  <div className="mb-2">
+                    <span
+                      className="inline-block text-xs font-bold px-3 py-1 rounded-full mb-3"
+                      style={{ color: primary.badgeColor, backgroundColor: primary.badgeBg }}
+                    >
+                      {primary.badge}
+                    </span>
+                    <h3 className="text-3xl font-bold mb-1 text-white">
+                      {primary.title}
+                    </h3>
+                    <p className="text-base mb-4 text-primary-100">
+                      {primary.subtitle}
+                    </p>
+                    {primary.forWhom && (
+                      <p className="text-sm italic mb-4 text-primary-200">
+                        Для кого: {primary.forWhom}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-baseline mb-8">
+                    <span className="text-5xl font-extrabold text-white">
+                      {primary.price}
+                    </span>
+                    <span className="ml-2 text-xl text-primary-100">
+                      {primary.unit}
+                    </span>
+                  </div>
+
+                  <ul className="space-y-4 mb-10 flex-1">
+                    {primary.features.map((f, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <Check className="h-6 w-6 mt-0.5 flex-shrink-0 text-yellow-400" />
+                        <span className="text-base text-primary-100">{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button
+                    onClick={() => setModalPlan(primary)}
+                    className="w-full font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors duration-300 bg-yellow-400 text-primary-900 hover:bg-yellow-300 text-lg"
+                  >
+                    <Send className="h-5 w-5" />
+                    {primary.cta}
+                  </button>
+                </div>
               </div>
-            ))}
+            )}
           </div>
 
           <div className="mt-12 text-center">
