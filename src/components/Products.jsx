@@ -24,6 +24,7 @@ const plans = [
     cta: 'Получить доступ',
     highlight: false,
   },
+  /* ВРЕМЕННО ОТКЛЮЧЕНО — Недельный интенсив (будет заменён другим продуктом)
   {
     id: 'intensive',
     badge: 'Быстрый результат',
@@ -43,6 +44,7 @@ const plans = [
     cta: 'Записаться',
     highlight: false,
   },
+  */
   {
     id: 'course',
     badge: 'Лучший выбор',

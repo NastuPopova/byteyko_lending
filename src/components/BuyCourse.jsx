@@ -44,7 +44,7 @@ const BuyCourse = () => {
             </button>
           </div>
 
-          {/* Недельный интенсив */}
+          {/* ВРЕМЕННО ОТКЛЮЧЕНО — Недельный интенсив (будет заменён другим продуктом)
           <div className="bg-white rounded-2xl p-8 shadow-2xl hover:scale-105 transition-all duration-300 flex flex-col">
             <div className="text-center mb-6 flex-1">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Недельный интенсив</h3>
@@ -62,6 +62,7 @@ const BuyCourse = () => {
               Начать интенсив
             </button>
           </div>
+          */}
 
           {/* Курс 5 занятий */}
           <div className="relative bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl p-8 shadow-2xl hover:scale-105 transition-all duration-300 ring-4 ring-yellow-400 flex flex-col">
